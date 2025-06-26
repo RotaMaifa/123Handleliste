@@ -1,0 +1,99 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #afe8c1;
+  color: #000000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  height: 100vh;
+}
+
+.container {
+  margin-top: 30px;
+  width: 80%;
+  max-width: 800px;
+  text-align: center;
+}
+
+.title {
+  color: #000000;
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.textarea-container {
+  display: flex;
+  align-items: flex-start;
+  position: relative;
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+#textarea {
+  width: 100%;
+  height: 600px;
+  padding: 20px;
+  font-size: 18px;
+  border: 2px solid #000000;
+  line-height: 1.6;
+  resize: vertical;
+  overflow-y: auto;
+  border-radius: 8px;
+  background-color: #afe8c1;
+  color: #000000;
+  font-family: monospace;
+}
+
+.suggestions-list {
+  min-width: 220px;
+  width: auto;
+  max-width: 600px;  /* caps width */
+  margin-left: 10px;
+  max-height: 600px;
+  overflow-y: auto;
+  background-color: #afe8c1;
+  color: #000000;
+  border: 2px solid #000000;
+  list-style: none;
+  padding: 0;
+  font-size: 16px;
+  border-radius: 6px;
+  box-shadow: none;
+  position: sticky;
+  top: 0;
+  text-align: left; /* Ensure text is left-aligned */
+  list-style-position: inside;
+}
+.suggestions-list li {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+
+.suggestions-list li:hover,
+.suggestions-list li.active {
+  background-color: #d4f5df;
+}
+
+
+button {
+  margin: 10px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  cursor: pointer;
+  background-color: #afe8c1;
+  color: #000000;
+  border: 2px solid #000000;
+  border-radius: 6px;
+}
+
+.description {
+  margin-top: 20px;
+  font-size: 0.9rem;
+  color: #000000;
+}
