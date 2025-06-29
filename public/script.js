@@ -1,7 +1,9 @@
 let groceries = [];
 let currentSuggestions = [];
 let selectedIndex = -1;
+let tagCycleIndex = 0;
 
+const tagCycleOptions = ["(skivet)", "(ikke skivet)", "(oppskåret)", "(uten sukker)", "(rimeligste)", "(first price)","none"];
 const textarea = document.getElementById("textarea");
 const suggestionsBox = document.getElementById("suggestions");
 const unitInput = document.getElementById("unitInput");
@@ -10,12 +12,31 @@ function getUnit() {
   return unitInput.value.trim() || "stk.";
 }
 
+// Load groceries from multiple JSON files
+const groceryFiles = [
+  "mat.json",
+  "drikke.json", 
+  "meieri.json",
+  "personlig.json",
+  "renhold.json",
+  "varer.json"
+];
 
-// Load groceries
-fetch("groceries.json")
-  .then(res => res.json())
-  .then(data => groceries = data.map(g => g.toLowerCase()))
-  .catch(err => console.error("Feil ved lasting av groceries.json:", err));
+Promise.all(
+  groceryFiles.map(file =>
+    fetch(file)
+      .then(res => res.json())
+      .catch(err => {
+        console.error(`Feil ved lasting av ${file}:`, err);
+        return []; // fallback to empty array if one file fails
+      })
+  )
+).then(results => {
+  // Merge and lowercase all items
+  groceries = results.flat().map(item => item.toLowerCase());
+});
+
+
 
 function insertAtCursor(text) {
   const start = textarea.selectionStart;
@@ -26,6 +47,42 @@ function insertAtCursor(text) {
   textarea.focus();
 }
 
+// Handle one section at a time
+function getCurrentSectionItems(cursorPos) {
+  const lines = textarea.value.split("\n");
+  let sectionStart = 0;
+  let sectionEnd = lines.length;
+  let charCount = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const isHeader = line === "__________________________________" && lines[i + 1] && lines[i + 1] === lines[i + 1].toUpperCase();
+
+    const start = charCount;
+    const end = charCount + lines[i].length;
+
+    if (isHeader && end < cursorPos) {
+      sectionStart = i + 2;
+    } else if (isHeader && start > cursorPos) {
+      sectionEnd = i;
+      break;
+    }
+
+    charCount += lines[i].length + 1;
+  }
+
+  // Extract item names only (e.g., from "3 stk. lett melk" → "lett melk")
+  const itemRegex = new RegExp(`^\\d+\\s*${getUnit().replace(".", "\\.")}\\s+(.+)$`, "i");
+
+  return lines
+    .slice(sectionStart, sectionEnd)
+    .map(line => {
+      const match = line.trim().match(itemRegex);
+      return match ? match[1].toLowerCase() : null;
+    })
+    .filter(Boolean); // Remove nulls
+}
+
 // Typing Suggestions
 textarea.addEventListener("input", () => {
   const cursorPos = textarea.selectionStart;
@@ -33,26 +90,59 @@ textarea.addEventListener("input", () => {
   const lineIndex = textarea.value.substring(0, cursorPos).split("\n").length - 1;
   const currentLine = lines[lineIndex].trim();
 
-  // Always extract the last word after optional quantity and "stk."
-  const match = currentLine.match(/(?:\d+\s*(?:stk\.?)?\s*)?(\w{2,})$/i);
-  const query = match ? match[1].toLowerCase() : "";
+  // Extract last word after optional quantity and "stk."
+  const match = currentLine.match(/(?:\d+\s*(?:stk\.?)?\s*)?([\p{L}]{2,})$/u);
+  const query = match ? match[1] : "";
 
-  currentSuggestions = query.length > 0
-    ? groceries.filter(item => item.includes(query))
-    : [];
+  if (query.length > 0) {
+    const sectionItems = getCurrentSectionItems(cursorPos);
+    const normalize = (str) => 
+      str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const normalizedQuery = normalize(query);
+
+    currentSuggestions = groceries
+      .filter(item => !sectionItems.includes(item))
+      .filter(item => normalize(item).includes(normalizedQuery))
+      .sort((a, b) => {
+        const normalizeA = normalize(a);
+        const normalizeB = normalize(b);
+
+        const aStarts = normalizeA.startsWith(normalizedQuery);
+        const bStarts = normalizeB.startsWith(normalizedQuery);
+
+        if (aStarts && !bStarts) return -1;
+        if (!aStarts && bStarts) return 1;
+
+        const aWordMatch = normalizeA.split(" ").some(word => word.startsWith(normalizedQuery));
+        const bWordMatch = normalizeB.split(" ").some(word => word.startsWith(normalizedQuery));
+
+        if (aWordMatch && !bWordMatch) return -1;
+        if (!aWordMatch && bWordMatch) return 1;
+
+        return a.localeCompare(b);
+      });
+  } else {
+    currentSuggestions = [];
+  }
 
   showSuggestions(currentSuggestions);
 });
+
+
+
+
 
 function showSuggestions(list) {
   suggestionsBox.innerHTML = "";
 
   if (!list || list.length === 0) {
     const li = document.createElement("li");
-    li.textContent = "index";
+    li.textContent = "Ingen forslag"; // or "No suggestions"
+    li.classList.add("placeholder");  // Add a class to identify
     li.style.color = "#666";
     li.style.padding = "6px";
     li.style.fontStyle = "italic";
+    li.style.pointerEvents = "none";  // Prevent click
     suggestionsBox.appendChild(li);
   } else {
     list.forEach((item) => {
@@ -94,10 +184,10 @@ function applySuggestion(word, delta = +1) {
     let qty = parseInt(match[1]);
     qty += delta;
     if (qty < 1) qty = 1;  // You can remove the line if qty < 1 if preferred
-    updatedLine = `${qty} ${getUnit()} ${word}`;
+    updatedLine = `${qty} ${getUnit()} ${capitalizeWords(word)}`;
   } else {
     // Not matching, insert new
-    updatedLine = `1 ${getUnit()} ${word}`;
+    updatedLine = `1 ${getUnit()} ${capitalizeWords(word)}`;
   }
 
   // Rebuild text
@@ -124,8 +214,9 @@ function insertSelectedSuggestion(word) {
   const regex = new RegExp(`^\\d+\\s*${getUnit().replace(".", "\\.")}\\s+${word}$`, "i");
 
   let updatedLine = currentLine.match(regex)
-    ? currentLine // already formatted, leave unchanged
-    : `1 ${getUnit()} ${word}`;
+    ? currentLine
+    : `1 ${getUnit()} ${capitalizeWords(word)}`;
+
 
   const newText = text.substring(0, lineStart) + updatedLine + text.substring(lineEnd === -1 ? text.length : lineEnd);
 
@@ -167,6 +258,77 @@ textarea.addEventListener("keyup", (e) => {
   triggerSuggestionFromCursor();
 });
 
+// Capital first letter in groceries
+function capitalizeItemLines(text) {
+  return text.split("\n").map(line => {
+    if (
+      line.trim().match(/^_+$/) ||
+      line.trim() === line.trim().toUpperCase()
+    ) {
+      return line; // Don't modify underline/header lines
+    }
+
+    const match = line.match(/^(\d+\s+stk\.?\s+)(.+)$/i);
+    if (match) {
+      const quantity = match[1];
+      const item = match[2]
+        .split(" ")
+        .map((word, i) => (i === 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word))
+        .join(" ");
+      return quantity + item;
+    }
+
+    return line;
+  }).join("\n");
+}
+
+
+
+// Change to headline 
+textarea.addEventListener("dblclick", () => {
+  const cursor = textarea.selectionStart;
+  const lines = textarea.value.split("\n");
+
+  let charCount = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const lineStart = charCount;
+    const lineEnd = charCount + lines[i].length;
+
+    if (cursor >= lineStart && cursor <= lineEnd) {
+      const currentLine = lines[i].trim();
+      const isUnderline = currentLine.match(/^_+$/);
+      const isUpperHeader = currentLine === currentLine.toUpperCase() && currentLine !== currentLine.toLowerCase();
+
+      // Case 1: Revert header → normal line
+      if (isUpperHeader && i > 0 && lines[i - 1].trim().match(/^_+$/)) {
+        const original = currentLine.toLowerCase();
+        lines.splice(i - 1, 2, original); // remove underline and header, replace with original
+        textarea.value = lines.join("\n");
+
+        const newCursor = lines.slice(0, i).join("\n").length + 1;
+        textarea.selectionStart = textarea.selectionEnd = newCursor;
+        break;
+      }
+
+      // Case 2: Apply header formatting
+      if (!isUnderline) {
+        lines.splice(i, 1, "__________________________________", currentLine.toUpperCase());
+        textarea.value = lines.join("\n");
+
+        const newCursor = lines.slice(0, i + 2).join("\n").length + 1;
+        textarea.selectionStart = textarea.selectionEnd = newCursor;
+        break;
+      }
+
+      // Case 3: Clicked the underline → do nothing
+      break;
+    }
+
+    charCount += lines[i].length + 1;
+  }
+});
+
 
 // Key Handling
 textarea.addEventListener("keydown", (e) => {
@@ -183,26 +345,25 @@ textarea.addEventListener("keydown", (e) => {
       e.preventDefault();
       selectedIndex = (selectedIndex - 1 + items.length) % items.length;
 	} else if (e.key === "Enter" && selectedIndex >= 0) {
-	  const selectedText = items[selectedIndex].textContent.trim().toLowerCase();
+	  const selectedItem = items[selectedIndex];
+	  if (selectedItem.classList.contains("placeholder")) {
+		return; // Don't insert placeholders like "index"
+	  }
 
+	  const selectedText = selectedItem.textContent.trim().toLowerCase();
 	  const cursorPos = textarea.selectionStart;
-	  const lines = textarea.value.split("\n");
 	  const lineIndex = textarea.value.substring(0, cursorPos).split("\n").length - 1;
 	  const currentLine = lines[lineIndex].trim().toLowerCase();
 
-	  // Regex to extract item name from current line
 	  const match = currentLine.match(new RegExp(`^(\\d+)?\\s*${getUnit().replace(".", "\\.")}?\\s*(.*)$`, "i"));
 	  const currentItem = match && match[2] ? match[2].toLowerCase().trim() : "";
 
-	  if (currentItem === selectedText) {
-		// Let Enter behave normally: insert new line
-		return;
-	  }
+	  if (currentItem === selectedText) return; // Let Enter insert new line
 
-	  // Otherwise, insert selected suggestion
 	  e.preventDefault();
-	  insertSelectedSuggestion(items[selectedIndex].textContent);
+	  insertSelectedSuggestion(selectedItem.textContent);
 	}
+
 
 
 
@@ -212,32 +373,39 @@ textarea.addEventListener("keydown", (e) => {
   }
 
   // Auto-fix line on Enter
-  if (e.key === "Enter") {
+  if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
     const currentPos = textarea.selectionStart;
-    const allLines = textarea.value.split("\n");
+    const lines = textarea.value.split("\n");
+
     let charCount = 0;
 
-    for (let i = 0; i < allLines.length; i++) {
-      const line = allLines[i];
+    for (let i = 0; i < lines.length; i++) {
       const lineStart = charCount;
-      const lineEnd = charCount + line.length;
+      const lineEnd = charCount + lines[i].length;
 
-      if (cursor >= lineStart && cursor <= lineEnd + 1) {
-        let updatedLine = autoFixLine(line.trim());
-        allLines[i] = updatedLine;
-        textarea.value = allLines.join("\n");
+      if (currentPos >= lineStart && currentPos <= lineEnd + 1) {
+        const originalLine = lines[i];
+        const fixedLine = autoFixLine(originalLine.trim());
 
-        // Set cursor to next line
-        const newCursor = allLines.slice(0, i + 1).join("\n").length + 1;
-        setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = newCursor;
-        }, 0);
+		if (originalLine !== fixedLine) {
+		  e.preventDefault(); // Stop default Enter
+
+		  lines[i] = fixedLine;
+		  textarea.value = lines.join("\n");
+
+		  // Move cursor to next line (without extra line)
+		  const newCursor = lines.slice(0, i + 1).join("\n").length + 1;
+		  textarea.selectionStart = textarea.selectionEnd = newCursor;
+		}
+
 
         break;
       }
-      charCount += line.length + 1;
+
+      charCount += lines[i].length + 1;
     }
   }
+
 
   // Ctrl + Up/Down: Adjust quantity
   if (e.ctrlKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
@@ -260,6 +428,62 @@ textarea.addEventListener("keydown", (e) => {
       charCount += line.length + 1;
     }
   }
+  
+  // Ctrl + 1: Auto-format unformatted lines 
+  if (e.ctrlKey && e.key === "1") {
+    e.preventDefault();
+    const lines = textarea.value.split("\n");
+    const fixedLines = lines.map((line) => autoFixLine(line)).join("\n");
+    textarea.value = capitalizeItemLines(fixedLines);
+  }
+
+  // Ctrl + Space: Cycle tags
+  if (e.ctrlKey && e.code === "Space") {
+    e.preventDefault();
+
+    const cursor = textarea.selectionStart;
+    const lines = textarea.value.split("\n");
+
+    let charCount = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const lineStart = charCount;
+      const lineEnd = charCount + lines[i].length;
+
+      if (cursor >= lineStart && cursor <= lineEnd + 1) {
+        let line = lines[i];
+
+        // Build regex to match any tag in the options list (except "none")
+        const tags = tagCycleOptions
+          .filter(tag => tag !== "none")
+          .map(tag => tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')) // escape regex chars
+          .join("|");
+
+        const tagRegex = new RegExp(`\\s*(${tags})$`, "i");
+
+        // Remove existing tag at end of line
+        line = line.replace(tagRegex, "").trim();
+
+        // Pick next tag
+        tagCycleIndex = (tagCycleIndex + 1) % tagCycleOptions.length;
+        const nextTag = tagCycleOptions[tagCycleIndex];
+
+        if (nextTag !== "none") {
+          line += ` ${nextTag}`;
+        }
+
+        lines[i] = line;
+        textarea.value = lines.join("\n");
+
+        // Restore cursor
+        textarea.selectionStart = textarea.selectionEnd = lineStart + line.length;
+        break;
+      }
+
+      charCount += lines[i].length + 1;
+    }
+  }
+
+
 });
 
 // KOPIER
@@ -287,6 +511,15 @@ document.getElementById("copyBtn").addEventListener("click", () => {
     });
 });
 
+// Utility: Capitalize first letter of each word
+function capitalizeWords(text) {
+  return text
+    .split(" ")
+    .map(word =>
+      word.charAt(0).toLocaleUpperCase("no-NO") + word.slice(1).toLocaleLowerCase("no-NO")
+    )
+    .join(" ");
+}
 
 // Utility: Auto-correct line
 function autoFixLine(line) {
@@ -296,10 +529,19 @@ function autoFixLine(line) {
   line = line.replace(/\buten sukker\b|\(uten sukker\)/gi, "u/sukker");
   line = line.replace(/\bmalk\b/gi, "melk");
 
+  // We'll only replace "melk" if the line is either:
+  // - exactly "melk" or "number melk"
+  // - or line is exactly "number melk" with no extra words
+  // So if there are other words before "melk" (like "sjoko melk"), do NOT replace.
+
+  // Match lines with optional number + "melk" ONLY:
+  if (/^\d*\s*melk$/i.test(line.trim())) {
+    line = line.replace(/melk$/i, "lett melk");
+  }
+
   line = line.trim();
   if (!line) return "";
 
-  // Normalize grocery list
   const normalizedGroceries = groceries.map(g => g.toLowerCase());
 
   // Match format: "1 lett melk"
@@ -308,19 +550,19 @@ function autoFixLine(line) {
     const quantity = match[1];
     const itemName = match[2].toLowerCase().trim();
     if (normalizedGroceries.includes(itemName)) {
-      return `${quantity} ${getUnit()} ${match[2]}`;
-
+      return `${quantity} ${getUnit()} ${capitalizeWords(itemName)}`;
     }
   }
 
   // Match: "lett melk" (no quantity)
-  const lineLower = line.toLowerCase();
-  if (normalizedGroceries.includes(lineLower)) {
-    return `1 ${getUnit()} ${line}`;
+  if (normalizedGroceries.includes(line.toLowerCase())) {
+    return `1 ${getUnit()} ${capitalizeWords(line.toLowerCase())}`;
   }
 
   return line;
 }
+
+
 
 
 const helpBtn = document.getElementById("helpBtn");

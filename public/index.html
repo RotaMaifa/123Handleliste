@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="no">
 <head>
@@ -10,11 +11,12 @@
     
     <!-- New header with title and help button side by side -->
 	<div class="header">
-	  <h1 class="title">1-2-3 Handleliste</h1>
+	 
+	  <h1 class="title" style="font-family: fantasy;">1-2-3 Handleliste</h1>
 
 	  <div class="header-right">
 	    <!-- New reminder text -->
-	    <div id="reminderText" class="reminder-text">
+	    <div id="reminderText" class="reminder-text" style="font-size: 16px; font-family: revert;">
 	  	  Husk å kopiere og lime inn i ditt lokale skriveprogram — denne siden lagrer ikke teksten!
 	    </div>
 		<input id="unitInput" type="text" value="stk." title="Endre enhet (f.eks. #, pk., boks)"
@@ -38,48 +40,64 @@
 	
     <button id="copyBtn">KOPIER</button>
 
-    <div class="description">
+    <div class="description" style="font-size: 16px; font-family: monospace;">
       Dette nettstedet hjelper deg å skrive handlelister raskt og enkelt. <br>
       Laget av en nattevakt for en nattevakt. <br>
-      123handleliste@gmail.com
+      <strong>123handleliste@gmail.com</strong><br>
     </div>
 
 	<!-- Help Modal -->
 	<div id="helpModal" class="help-modal hidden">
 	  <div class="help-content" style="font-size: 16px; font-family: sans-serif;">
 		<span class="close-btn" id="closeHelp">&times;</span>
-		<h2 style="font-size: 20px; font-weight: bold;">1-2-3 Handleliste</h2>
 
-		<p><strong style="font-size: 18px;">Hva er dette?</strong><br>
+		<p><strong style="font-size: 16px;">Hva er 1-2-3 Handleliste?</strong><br>
 		  Dette nettstedet hjelper deg med å lage handlelister raskt og enkelt ved hjelp av smarte forslag og snarveier.
 		  Det ble laget etter erfaring med lange handlelister og et behov for et enkelt verktøy uten nedlasting, kjøp eller innlogging.
 		  Her er det bare å klippe og lime – enklere blir det ikke.
-		</p>
-
-		<p><strong style="font-size: 18px;">Hvordan bruker jeg det?</strong><br>
-		  Velg deg et prefiks i det lille feltet øverst eller bruk standard (stk.). 	
+		  Velg et prefiks i det lille feltet øverst, eller bruk standarden (stk.). 	
 		  Skriv inn varer i skrivefeltet – forslag vil automatisk vises i listen til høyre.
-		  Klikk på ønsket vare for å legge den til med valgte prefiks.
+		  Klikk med mus eller tastatur på ønsket vare for å legge den til med valgt prefiks.
 		  Deretter kan du bruke enten tastatur eller mus for å øke eller redusere antallet.
-		</p>
-		
-		<p>  
-		  Klikk gjentatte ganger med venstre knapp på varen i listen for å øke antallet, eller høyre for å trekke fra.
-		  Du kan også benytte tastaturet med ctrl + pil opp eller ned så lenge du befinner deg på linjen i teksten.
-		  Du trenger ikke bruke forslagene – om du for eksempel skriver "8 poteter", vil det automatisk bli til "8 stk. poteter" når du trykker Enter.
+		  Du trenger ikke bruke forslagene – om du for eksempel skriver "8 poteter", 
+		  vil det automatisk bli til "8 stk. poteter" når du trykker Enter.
 		</p>
 
-		<p>
-		  Etter hvert som listen vokser, anbefaler vi at du kopierer den inn i e-post eller et skriveprogram lokalt på datamaskinen,
-		  slik at du ikke mister innholdet. Du kan også lime inn tidligere forberedte handlelister og jobbe videre med dem her.
-		  Nettstedet lagrer ingenting, noe som gjør det trygt med tanke på personvern og datasikkerhet.
-		</p>		
+		<div style="text-align: left; direction: ltr;">
+		  <p><strong style="font-size: 15px;">Juster antall:</strong>
+			Klikk gjentatte ganger med venstre museknapp på varen i listen for å øke antallet, eller høyre for å trekke fra.
+			Du kan også benytte tastaturet med "Ctrl + pil opp" eller "pil ned" så lenge du befinner deg på linjen i teksten.
+		  </p>
 
-		<p><strong style="font-size: 18px;">Tastatursnarveier</strong></p>
+		  <p><strong style="font-size: 15px;">Del listen i seksjoner:</strong>
+			For å dele opp handlelisten, for eksempel på Mari, Viggo og Tor, skriv "Mari" i tekstfeltet og dobbeltklikk med
+			venstre museknapp på "Mari". Den vil nå bli skrevet med store bokstaver, og en linje vil legges over navnet.
+			Linjen er ikke til pynt – programmet deler nå opp handlelistene individuelt. Du vil for eksempel ikke få alternativ 
+			om å legge til "lett melk" dersom "lett melk" allerede er lagt til i Maris seksjon av handlelisten. Når du deretter legger til 
+			Viggo, vil en ny seksjon oppstå, osv.
+		  </p>
+
+		  <p><strong style="font-size: 15px;">Legg til tillegg:</strong>
+			Når linjen er ferdig, kan du legge til tillegg bak varen ved å trykke "Ctrl + mellomrom" mens du står på linjen, og bla mellom
+			(skivet), (ikke skivet), (oppskåret), (uten sukker), (rimeligste) og (first price) ved å gjenta "Ctrl + mellomrom".		 
+		  </p>
+
+		  <p><strong style="font-size: 15px;">Lim inn og fiks handlelister:</strong>
+			Du kan også lime inn skrevne handlelister og jobbe videre med dem her. På samme måte som når
+			du skriver "8 poteter" og det automatisk blir til "8 stk. poteter", vil den fikse alle linjer med valgt
+			prefiks dersom du trykker "Ctrl + 1" etter at du har limt inn listen.
+		  </p>
+
+		  <p><strong style="font-size: 15px;">Husk å lagre:</strong>
+			Etter hvert som listen vokser, anbefaler vi at du kopierer den inn i en e-post eller et skriveprogram lokalt på 
+			datamaskinen, slik at du ikke mister innholdet. Nettstedet lagrer ingenting, noe som gjør det trygt med 
+			tanke på personvern og datasikkerhet.
+		  </p>
+		</div>
+
 		<ul style="padding-left: 0; list-style-type: none;">
 		  <li style="display: flex; justify-content: space-between;">
-			<kbd>HURTIGTASTER:</kbd>
-			<span></span>
+			<strong style="font-size: 15px;">Hurtigtast oversikt:</strong>
 		  </li>
 		  <li style="display: flex; justify-content: space-between;">
 			<kbd>PIL OPP ⬆/ PIL NED ⬇ eller MUSEPEKEREN 🖱️</kbd>
@@ -88,7 +106,11 @@
 		  <li style="display: flex; justify-content: space-between;">
 			<kbd>ENTER ⏎ eller VENSTRE MUSEKNAPP 🖱</kbd>
 			<span>Velg vare fra listen</span>
-		  </li>
+		  </li>	
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>Ctrl + Mellomrom</kbd>
+			<span>Velg mellom tillegg feks:(oppskåret)</span>
+		  </li>		  
 		  <li style="display: flex; justify-content: space-between;">
 			<kbd>Ctrl + PIL OPP ⬆</kbd>
 			<span>Øk antall</span>
@@ -96,6 +118,10 @@
 		  <li style="display: flex; justify-content: space-between;">
 			<kbd>Ctrl + PIL NED ⬇</kbd>
 			<span>Senk antall</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>Ctrl + 1</kbd>
+			<span>Fiks alle linjer</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between;">
 			<kbd>Klikk m/VENSTRE MUSEKNAPP på valgte vare i liste 🖱️</kbd>
@@ -110,12 +136,13 @@
 			<span>Fullfør og autoformater linje</span>
 		  </li>
 		</ul>
-
-		<p class="demo-text" style="font-style: italic; color: #555;">
-		  Hvis du savner en vare i listen, er du velkommen til å sende den inn til vår e-postadresse. Vi legger varen til ved neste oppdatering.<br>
-		  E-post: <strong>123handleliste@gmail.com</strong><br>
-		  Takk for hjelpen!
-		</p>
+		<div style="text-align: center;">
+		  <p class="demo-text" style="font-style: italic; color: #555;">
+		    Hvis du savner en vare i listen, er du velkommen til å sende den inn til vår e-postadresse.<br> 
+		    Vi legger varen til ved neste oppdatering.<br>
+		    E-post: <strong>123handleliste@gmail.com</strong><br>
+		    Takk for hjelpen!
+		  </p>
 
 	  </div>
 	</div>
