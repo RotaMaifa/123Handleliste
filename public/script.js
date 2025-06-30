@@ -569,7 +569,7 @@ function autoFixLine(line) {
 	{ match: /^\d*\s*stor pannekakemix$/i, replaceWith: "stor pk. toro pannekakemix" },
 	{ match: /^\d*\s*hansa$/i, replaceWith: "hansa lettøl 0.5l" },
 	{ match: /^\d*\s*barberblader$/i, replaceWith: "mach 3 barberblader	" },
-	{ match: /^\d*\s*flesk og duppe$/i, replaceWith: "fersk & ferdig flesk og duppe " }
+	{ match: /^\d*\s*flesk og duppe$/i, replaceWith: "fersk & ferdig flesk og duppe " },
 	{ match: /^\d*\s*cola zero$/i, replaceWith: "coca zero 0.33l " }
 
   ];
