@@ -1,3 +1,5 @@
+
+
 let groceries = [];
 let currentSuggestions = [];
 let selectedIndex = -1;
@@ -128,10 +130,6 @@ textarea.addEventListener("input", () => {
   showSuggestions(currentSuggestions);
 });
 
-
-
-
-
 function showSuggestions(list) {
   suggestionsBox.innerHTML = "";
 
@@ -240,7 +238,7 @@ function triggerSuggestionFromCursor() {
   const query = match && match[2] ? match[2].toLowerCase().trim() : "";
 
   if (query.length > 1) {
-    currentSuggestions = groceries.filter(item => item.includes(query));
+    currentSuggestions = groceries.filter(item => item.toLowerCase().trim() === query);
     showSuggestions(currentSuggestions);
   } else {
     suggestionsBox.style.display = "index";
@@ -364,9 +362,6 @@ textarea.addEventListener("keydown", (e) => {
 	  insertSelectedSuggestion(selectedItem.textContent);
 	}
 
-
-
-
     items.forEach((item, idx) => {
       item.classList.toggle("active", idx === selectedIndex);
     });
@@ -486,6 +481,156 @@ textarea.addEventListener("keydown", (e) => {
 
 });
 
+
+// Utility: Capitalize first letter of each word
+function capitalizeWords(text) {
+  return text
+    .split(" ")
+    .map(word =>
+      word.charAt(0).toLocaleUpperCase("no-NO") + word.slice(1).toLocaleLowerCase("no-NO")
+    )
+    .join(" ");
+}
+
+// Utility: Auto-correct line
+function autoFixLine(line) {
+  if (!line) return "";
+
+  // Fix known typos
+  line = line.replace(/\bmalk\b/gi, "melk");
+
+  // Fast packs auto fix
+  const replacements_packs = [   
+    { match: /^\d*\s*6\.?\s*egg$/i, replaceWith: "6pk. egg" },
+	{ match: /^\d*\s*12\.?\s*egg$/i, replaceWith: "12pk. egg" },
+	{ match: /^\d*\s*18\.?\s*egg$/i, replaceWith: "18pk. egg" },
+    { match: /^\d*\s*6pk\.?\s*egg$/i, replaceWith: "6pk. egg" },
+	{ match: /^\d*\s*12pk\.?\s*egg$/i, replaceWith: "12pk. egg" },
+	{ match: /^\d*\s*18pk\.?\s*egg$/i, replaceWith: "18pk. egg" },
+    { match: /^\d*\s*4pk\.?\s*pepsi max$/i, replaceWith: "4pk. pepsi max 1.5l" },
+    { match: /^\d*\s*4pk\.?\s*co(?:la|ca) zero$/i, replaceWith: "4pk. coca zero 0.33l" },
+    { match: /^\d*\s*4pk\.?\s*pepsi$/i, replaceWith: "4pk. pepsi 1.5l" },
+    { match: /^\d*\s*4pk\.?\s*coca cola$/i, replaceWith: "4pk. coca-cola 1.5l" },
+  ];
+
+  line = line.trim();
+
+  for (const { match, replaceWith } of replacements_packs) {
+    if (match.test(line)) {
+      // Replace only the matching part, so use .replace with the regex
+      line = line.replace(match, replaceWith);
+      break; // Exit loop after first match if only one replacement per line
+    }
+  }  
+
+  
+  // Fast single unit auto fix
+  const replacements = [  
+	{ match: /^\d*\s*melk$/i, replaceWith: "lett melk" },
+    { match: /^\d*\s*solo super$/i, replaceWith: "solo super 0.5l" },
+    { match: /^\d*\s*pepsi max$/i, replaceWith: "pepsi max 1.5l" },	
+    { match: /^\d*\s*pepsi$/i, replaceWith: "pepsi 1.5l" },
+	{ match: /^\d*\s*sprite$/i, replaceWith: "sprite 1.5l" },
+	{ match: /^\d*\s*urge$/i, replaceWith: "urge 1.5l" },
+	{ match: /^\d*\s*fanta$/i, replaceWith: "fanta 1.5l" },
+	{ match: /^\d*\s*cola$/i, replaceWith: "cola 1.5l" },
+    { match: /^\d*\s*first price cola$/i, replaceWith: "cola 1.5l first price u/sukker" },
+    { match: /^\d*\s*munkholm$/i, replaceWith: "munkholm alkoholfri 0.33l" },
+    { match: /^\d*\s*coca cola$/i, replaceWith: "coca-cola 0.5l" },
+    { match: /^\d*\s*sigaretter$/i, replaceWith: "paramount 20pk sigaretter. (om dere ikke har paramount, ta da prince hvit/rød.)" },
+    { match: /^\d*\s*olw$/i, replaceWith: "olw cheez doodles original" },
+    { match: /^\d*\s*kokesjokolade$/i, replaceWith: "freia kokesjokolade 70%" },
+    { match: /^\d*\s*strømpebukse$/i, replaceWith: "strømpebukse Lamote Motelongs Tan 36/44" },
+    { match: /^\d*\s*truser$/i, replaceWith: "truser pierre robert high waist (organic cotton). sort. str. large" },
+	{ match: /^\d*\s*farris$/i, replaceWith: "farris 0.5l" },
+	{ match: /^\d*\s*farris lime$/i, replaceWith: "farris lime 0.5l" },
+    { match: /^\d*\s*frus$/i, replaceWith: "frus bringebær 0.5l" },
+	{ match: /^\d*\s*villa$/i, replaceWith: "villa u/sukker 1.5l" },
+	{ match: /^\d*\s*pærebrus$/i, replaceWith: "pærebrus u/sukker 1.5l" },
+	{ match: /^\d*\s*rømmegrøt$/i, replaceWith: "fjordland rømmegrøt" },
+	{ match: /^\d*\s*grøt$/i, replaceWith: "fjordland risengrynsgrøt" },
+	{ match: /^\d*\s*risengrynsgrøt$/i, replaceWith: "fjordland risengrynsgrøt" },
+	{ match: /^\d*\s*svenske kjøttboller$/i, replaceWith: "fjordland svenske kjøttboller" },
+	{ match: /^\d*\s*kjøttkake$/i, replaceWith: "fjordland kjøttkake" },
+	{ match: /^\d*\s*fiskeboller$/i, replaceWith: "fjordland fiskeboller" },
+	{ match: /^\d*\s*fiskekaker$/i, replaceWith: "fjordland fiskekaker" },
+	{ match: /^\d*\s*torsk$/i, replaceWith: "fjordland torsk" },
+	{ match: /^\d*\s*raspeballer$/i, replaceWith: "fjordland raspeballer" },
+	{ match: /^\d*\s*sweet and sour kylling$/i, replaceWith: "fjordland sweet and sour kylling" },
+	{ match: /^\d*\s*lite vaffelmix$/i, replaceWith: "lite pk. toro vaffelmix" },
+	{ match: /^\d*\s*stor vaffelmix$/i, replaceWith: "stor pk. toro vaffelmix" },
+	{ match: /^\d*\s*big one$/i, replaceWith: "big one classic" },
+	{ match: /^\d*\s*lasagne$/i, replaceWith: "fersk & ferdig lasagne" },	
+	{ match: /^\d*\s*laks$/i, replaceWith: "fjordland laks" },
+	{ match: /^\d*\s*ananasringer$/i, replaceWith: "3pk. ananasringer" },
+	{ match: /^\d*\s*porsjon snus$/i, replaceWith: "general porsjon snus" },
+	{ match: /^\d*\s*løs snus$/i, replaceWith: "general løs snus" },
+	{ match: /^\d*\s*lite pannekakemix$/i, replaceWith: "lite pk. toro pannekakemix" },
+	{ match: /^\d*\s*stor pannekakemix$/i, replaceWith: "stor pk. toro pannekakemix" },
+	{ match: /^\d*\s*hansa$/i, replaceWith: "hansa lettøl 0.5l" },
+	{ match: /^\d*\s*barberblader$/i, replaceWith: "mach 3 barberblader	" },
+	{ match: /^\d*\s*flesk og duppe$/i, replaceWith: "fersk & ferdig flesk og duppe " }
+	{ match: /^\d*\s*cola zero$/i, replaceWith: "coca zero 0.33l " }
+
+  ];
+
+  line = line.trim();
+
+  const numberAndItemMatch = line.match(/^(\d*)\s*(.*)$/);
+
+  if (numberAndItemMatch) {
+    const numberPart = numberAndItemMatch[1]; // the digits (if any)
+    const itemPart = numberAndItemMatch[2];   // the product description
+
+    for (const { match, replaceWith } of replacements) {
+      if (match.test(itemPart)) {
+        // Replace only inside the item part
+        const newItem = itemPart.replace(match, replaceWith);
+        // Rebuild line preserving number and spacing
+        line = (numberPart ? numberPart + " " : "") + newItem;
+        break; // stop after first match
+      }
+    }
+  }
+
+  line = line.trim();
+  if (!line) return "";
+
+  const normalizedGroceries = groceries.map(g => g.toLowerCase());
+
+  // Match format: "1 lett melk"
+  const match = line.match(/^(\d+)\s+(.+)$/);
+  if (match) {
+    const quantity = match[1];
+    const itemName = match[2].toLowerCase().trim();
+    if (normalizedGroceries.includes(itemName)) {
+      return `${quantity} ${getUnit()} ${capitalizeWords(itemName)}`;
+    }
+  }
+
+  // Match: "lett melk" (no quantity)
+  if (normalizedGroceries.includes(line.toLowerCase())) {
+    return `1 ${getUnit()} ${capitalizeWords(line.toLowerCase())}`;
+  }
+
+  return line;
+  
+
+}
+
+const helpBtn = document.getElementById("helpBtn");
+const helpModal = document.getElementById("helpModal");
+const closeHelp = document.getElementById("closeHelp");
+
+helpBtn.addEventListener("click", () => {
+  helpModal.classList.remove("hidden");
+});
+
+closeHelp.addEventListener("click", () => {
+  helpModal.classList.add("hidden");
+});
+
+
 // KOPIER
 document.getElementById("copyBtn").addEventListener("click", () => {
   const textarea = document.getElementById("textarea");
@@ -511,68 +656,11 @@ document.getElementById("copyBtn").addEventListener("click", () => {
     });
 });
 
-// Utility: Capitalize first letter of each word
-function capitalizeWords(text) {
-  return text
-    .split(" ")
-    .map(word =>
-      word.charAt(0).toLocaleUpperCase("no-NO") + word.slice(1).toLocaleLowerCase("no-NO")
-    )
-    .join(" ");
-}
-
-// Utility: Auto-correct line
-function autoFixLine(line) {
-  if (!line) return "";
-
-  // Fix known typos
-  line = line.replace(/\buten sukker\b|\(uten sukker\)/gi, "u/sukker");
-  line = line.replace(/\bmalk\b/gi, "melk");
-
-  // We'll only replace "melk" if the line is either:
-  // - exactly "melk" or "number melk"
-  // - or line is exactly "number melk" with no extra words
-  // So if there are other words before "melk" (like "sjoko melk"), do NOT replace.
-
-  // Match lines with optional number + "melk" ONLY:
-  if (/^\d*\s*melk$/i.test(line.trim())) {
-    line = line.replace(/melk$/i, "lett melk");
-  }
-
-  line = line.trim();
-  if (!line) return "";
-
-  const normalizedGroceries = groceries.map(g => g.toLowerCase());
-
-  // Match format: "1 lett melk"
-  const match = line.match(/^(\d+)\s+(.+)$/);
-  if (match) {
-    const quantity = match[1];
-    const itemName = match[2].toLowerCase().trim();
-    if (normalizedGroceries.includes(itemName)) {
-      return `${quantity} ${getUnit()} ${capitalizeWords(itemName)}`;
-    }
-  }
-
-  // Match: "lett melk" (no quantity)
-  if (normalizedGroceries.includes(line.toLowerCase())) {
-    return `1 ${getUnit()} ${capitalizeWords(line.toLowerCase())}`;
-  }
-
-  return line;
-}
-
-
-
-
-const helpBtn = document.getElementById("helpBtn");
-const helpModal = document.getElementById("helpModal");
-const closeHelp = document.getElementById("closeHelp");
-
-helpBtn.addEventListener("click", () => {
-  helpModal.classList.remove("hidden");
-});
-
-closeHelp.addEventListener("click", () => {
-  helpModal.classList.add("hidden");
+// OPPDATER
+document.getElementById("updateBtn").addEventListener("click", (e) => {
+    e.preventDefault(); // Nå er 'e' definert
+    const textarea = document.getElementById("textarea"); // sørg for at du refererer til eksisterende element
+    const lines = textarea.value.split("\n");
+    const fixedLines = lines.map((line) => autoFixLine(line)).join("\n");
+    textarea.value = capitalizeItemLines(fixedLines);
 });

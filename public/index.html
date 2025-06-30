@@ -6,28 +6,19 @@
   <title>Handleliste</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body style="background-color: #d6faed69;">
   <div class="container">
     
     <!-- New header with title and help button side by side -->
-	<div class="header">
-	 
+	<div class="header">	 
 	  <h1 class="title" style="font-family: fantasy;">1-2-3 Handleliste</h1>
-
 	  <div class="header-right">
-	    <!-- New reminder text -->
-	    <div id="reminderText" class="reminder-text" style="font-size: 16px; font-family: revert;">
-	  	  Husk å kopiere og lime inn i ditt lokale skriveprogram — denne siden lagrer ikke teksten!
-	    </div>
-		<input id="unitInput" type="text" value="stk." title="Endre enhet (f.eks. #, pk., boks)"
-			   style="width: 60px; margin-right: 8px; padding: 2px 4px; font-size: 14px; background-color: #e1f5e7;" />
-	    <button id="helpBtn" class="help-button">💡</button>
-	    <div id="helpText" class="help-text">INFO</div>
-		<div id="copyMessage" class="copy-message hidden">Handleliste kopiert til utklippstavlen!</div>
+		<div id="reminderText" class="reminder-text">
+		  Husk å kopiere og lim inn i ditt lokale skriveprogram — siden lagrer ikke!
+		  <div id="copyMessage" class="copy-message hidden">✅ Handleliste kopiert til utklippstavlen!</div>		  
+		</div>
+		<button id="helpBtn" class="help-button">💡</button>		
 	  </div>
-
-
-	  <div id="helpText" class="help-text">INFO</div>
 	</div>
 
     <div class="textarea-container"> 
@@ -36,9 +27,11 @@
 	    <li class="placeholder">index</li> <!-- This shows at start -->
 	  </ul>
     </div>
-
 	
-    <button id="copyBtn">KOPIER</button>
+	<button id="copyBtn" class="copy-button" >KOPIER</button>
+	<button id="updateBtn" class="update-button" >OPPDATER</button>
+	<span id="prefixText" class="prefix-text">PREFIKS=</span>
+	<input id="unitInput" type="text" value="stk."/>
 
     <div class="description" style="font-size: 16px; font-family: monospace;">
       Dette nettstedet hjelper deg å skrive handlelister raskt og enkelt. <br>
@@ -146,9 +139,6 @@
 
 	  </div>
 	</div>
-
-
-
 
   </div>
 

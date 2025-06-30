@@ -2,57 +2,88 @@ body {
   font-family: 'Segoe UI', sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #afe8c1;
+  background-color: #ffaa00;
   color: #000000;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .container {
-  margin-top: 20px;
-  width: 80%;
-  max-width: 800px;
+  margin: 10px auto;
+  width: 95%;
+  max-width: 1200px;
   text-align: center;
 }
 
 .title {
-  color: #fcb5a1; 
+  color: #fcb5a1;
   font-size: 2.5rem;
   font-weight: bold;
   margin: 0;
   text-align: center;
-
-  /* Create a black outline around the text using shadows */
   text-shadow:
-     -1px -1px 0 #000,
-      1px -1px 0 #000,
-     -1px  1px 0 #000,
-      1px  1px 0 #000;
+    -1px -1px 0 #000,
+     1px -1px 0 #000,
+    -1px  1px 0 #000,
+     1px  1px 0 #000;
+  font-family: fantasy;
+}
+
+.reminder-text {
+  font-size: 1.3rem;
+  font-weight: normal;
+  color: #f5d1c7;
+  margin: 1px auto;
+  font-style: inherit;
+  max-width: 1000px;
+  line-height: 1.2;
+  text-align: center;
+  text-shadow:
+    -0.5px -0.5px 0 #000,
+     0.5px -0.5px 0 #000,
+    -0.5px  0.5px 0 #000,
+     0.5px  0.5px 0 #000;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.header-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 2px;
 }
 
 .textarea-container {
   display: flex;
-  flex-direction: row;              /* Arrange textarea and list side-by-side */
+  flex-direction: row;
   justify-content: center;
   align-items: flex-start;
-  margin: 10px auto;                /* 40px */
-  width: 1000px;                    /* Fixed total width */
-  height: 600px;                    /* Fixed total height */
+  margin: 2px auto;
+  width: 100%;
+  max-width: 1000px;
+  height: 600px;
   box-sizing: border-box;
 }
 
-
 #textarea {
-  width: 700px;                     /* Fixed width for text area */
+  flex: 2;
   height: 100%;
   padding: 20px;
   font-size: 18px;
   border: 2px solid #000000;
   line-height: 1.6;
   border-radius: 8px;
-  resize: none;                    /* Prevent resizing */
+  resize: none;
   background-color: #e1f5e7;
   color: #000000;
   font-family: monospace;
@@ -60,8 +91,8 @@ body {
 }
 
 .suggestions-list {
-  width: 260px;                     /* Fixed width beside textarea */
-  height: 100%;                     /* Match textarea height */
+  flex: 1;
+  height: 100%;
   margin-left: 10px;
   overflow-y: auto;
   background-color: #e1f5e7;
@@ -70,6 +101,7 @@ body {
   font-size: 16px;
   list-style: none;
   text-align: left;
+  padding: 0;
 }
 
 .suggestions-list li {
@@ -77,17 +109,18 @@ body {
   cursor: pointer;
 }
 
-
 .suggestions-list li:hover,
 .suggestions-list li.active {
   background-color: #d4f5df;
 }
 
-.suggestions-list .placeholder {
+.suggestions-list.placeholder {
   color: #666;
   padding: 6px;
   font-style: italic;
 }
+
+
 
 button {
   margin: 10px;
@@ -102,10 +135,9 @@ button {
 
 .copy-message {
   text-align: center;
-  color: #cf816b;            /* dark green text */
-  border: 0px solid #c3e6cb;
-  border-radius: 0px;
-  font-weight: bold;
+  font-size: 14px;
+  color: #16c60c;
+  font-weight: normal;
   transition: opacity 0.5s ease;
   opacity: 1;
 }
@@ -116,43 +148,71 @@ button {
 }
 
 .description {
-  margin-top: 2px;
+  margin-top: 10px;
   font-size: 0.9rem;
   color: #000000;
+  font-family: monospace;
 }
-
-.header {
-  position: relative;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
 
 .help-button {
-  position: fixed;    /* fixed to viewport */
-  right: 10px;        /* small padding from right edge */
-  top: 40px;          /* align roughly with the title line */
+  margin-top: 5px;
+  margin-left: 260px;
   padding: 6px 12px;
   font-size: 14px;
   background-color: #e0f7fa;
   border: 2px solid #00796b;
   border-radius: 6px;
   cursor: pointer;
-  z-index: 1000;      /* make sure it stays on top */
+  z-index: 1000;
 }
 
-.help-text {
-  position: fixed;
-  right: 26px;        /* same right alignment as the button */
-  top: 85px;          /* a bit below the help button (adjust as needed) */
-  font-size: 13px;
-  color: #00796b;
-  font-family: 'Segoe UI', sans-serif;
-  max-width: 180px;    /* optional max width */
-  text-align: right;   /* align text to right */
-  user-select: none;   /* optional, prevent text selection */
+.copy-button {
+  margin-top: 20px;
+  margin-left: 680px;
+  margin-right: 0px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background-color: #e0f7fa;
+  border: 2px solid #00796b;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 1000;
 }
 
+.update-button {
+  margin-top: 20px;
+  margin-left: 0px;
+  margin-right: 30px;
+  padding: 6px 12px;
+  font-size: 12px;
+  background-color: #e0f7fa;
+  border: 2px solid #00796b;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 1000;
+}
+
+#unitInput {
+  margin-top: 20px;
+  margin-left: 0px;
+  margin-right: 0px;
+  font-size: 12px;
+  width: 40px;
+  padding: 4px;
+  font-size: 14px;
+  background-color: #e0f7fa;
+  border: 2px solid #00796b;
+  border-radius: 6px;
+}
+
+.prefix-text {
+  margin-top: 20px;
+  margin-left: 0px;
+  margin-right: 0px;
+  font-size: 12px;
+  width: 40px;
+  color: #000000;	
+}
 
 .help-modal {
   position: fixed;
@@ -160,24 +220,21 @@ button {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
 }
 
 .help-content {
-  background: white;
-  padding: 20px 30px;
-  max-width: 800px;
+  background-color: white;
+  margin: 5% auto;
+  padding: 20px;
+  max-width: 50%;
+  max-height: 100vh;
+  overflow-y: auto;
   border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
   position: relative;
-  font-family: sans-serif;
-}
-
-.help-content h2 {
-  margin-top: 0;
 }
 
 .help-content .close-btn {
@@ -198,19 +255,28 @@ button {
   color: #555;
 }
 
-.reminder-text {
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: #ffcbbc; 
-  margin-bottom: 4px;
-  max-width: 1000px;
-  line-height: 1.2;
-  text-align: center;
+/* RESPONSIVE STYLING */
+@media (max-width: 768px) {
+  .textarea-container {
+    flex-direction: column;
+    height: auto;
+  }
 
-  /* Create a black outline around the text using shadows */
-  text-shadow:
-     -1px -1px 0 #000,
-      1px -1px 0 #000,
-     -1px  1px 0 #000,
-      1px  1px 0 #000;
+  #textarea, .suggestions-list {
+    width: 100%;
+    margin: 0 auto 10px auto;
+  }
+
+  .suggestions-list {
+    margin-left: 0;
+  }
+
+  .header-right {
+    flex-direction: column;
+  }
+
+  .help-button, .help-text {
+    position: static;
+    margin: 5px auto;
+  }
 }
