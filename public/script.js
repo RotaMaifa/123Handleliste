@@ -442,12 +442,14 @@ textarea.addEventListener("keydown", (e) => {
         lineMatchesSuggestion(currentLine, validSuggestions[0].textContent.trim().toLowerCase());
 
       allowSuggestionNavigation = !noSuggestions && !oneSuggestionMatchesLine;
+	  
+      // Run updateSuggestions when navigating with arrows outside of suggestion navigation
+      if (isArrowKey && (!allowSuggestionNavigation || suggestionsBox.style.display !== "block")) {
+        updateSuggestions();
+      }
     }
 
-    // Run updateSuggestions when navigating with arrows outside of suggestion navigation
-    if (isArrowKey && (!allowSuggestionNavigation || suggestionsBox.style.display !== "block")) {
-      updateSuggestions();
-    }
+
 
     if (allowSuggestionNavigation) {
       if (e.key === "ArrowDown") {
