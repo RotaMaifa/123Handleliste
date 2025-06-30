@@ -12,13 +12,16 @@
     <!-- New header with title and help button side by side -->
 	<div class="header">	 
 	  <h1 class="title" style="font-family: fantasy;">1-2-3 Handleliste</h1>
-	  <div class="header-right">
-		<div id="reminderText" class="reminder-text">
-		  Husk å kopiere og lim inn i ditt lokale skriveprogram — siden lagrer ikke!
-		  <div id="copyMessage" class="copy-message hidden">✅ Handleliste kopiert til utklippstavlen!</div>		  
-		</div>
-		<button id="helpBtn" class="help-button">💡</button>		
+	  <div id="reminderText" class="reminder-text">
+		Husk å kopiere og lim inn i ditt lokale skriveprogram — siden lagrer ikke!	
 	  </div>
+	</div>
+	<div class="header-right">
+	  <span id="prefixText" class="prefix-text" style="text-align: right; direction: rtl;">VALGTE<br>PREFIKS</span>
+	  <input id="unitInput" type="text" value="stk."/>		
+	  <button id="copyBtn" class="copy-button" >KOPIER</button>
+	  <button id="updateBtn" class="update-button" >OPPDATER</button>
+	  <button id="helpBtn" class="help-button">💡</button>	
 	</div>
 
     <div class="textarea-container"> 
@@ -28,12 +31,9 @@
 	  </ul>
     </div>
 	
-	<button id="copyBtn" class="copy-button" >KOPIER</button>
-	<button id="updateBtn" class="update-button" >OPPDATER</button>
-	<span id="prefixText" class="prefix-text">PREFIKS=</span>
-	<input id="unitInput" type="text" value="stk."/>
-
+	
     <div class="description" style="font-size: 16px; font-family: monospace;">
+	  <div id="copyMessage" class="copy-message hidden">✅ Handleliste kopiert til utklippstavlen!</div>	
       Dette nettstedet hjelper deg å skrive handlelister raskt og enkelt. <br>
       Laget av en nattevakt for en nattevakt. <br>
       <strong>123handleliste@gmail.com</strong><br>
@@ -44,11 +44,11 @@
 	  <div class="help-content" style="font-size: 16px; font-family: sans-serif;">
 		<span class="close-btn" id="closeHelp">&times;</span>
 
-		<p><strong style="font-size: 16px;">Hva er 1-2-3 Handleliste?</strong><br>
+		<p><strong style="font-size: 18px;">Hva er 1-2-3 Handleliste?</strong><br>
 		  Dette nettstedet hjelper deg med å lage handlelister raskt og enkelt ved hjelp av smarte forslag og snarveier.
 		  Det ble laget etter erfaring med lange handlelister og et behov for et enkelt verktøy uten nedlasting, kjøp eller innlogging.
 		  Her er det bare å klippe og lime – enklere blir det ikke.
-		  Velg et prefiks i det lille feltet øverst, eller bruk standarden (stk.). 	
+		  Velg deg et prefiks i det lille tekst boksen øverst til høyre, eller bruk standarden (stk.). 	
 		  Skriv inn varer i skrivefeltet – forslag vil automatisk vises i listen til høyre.
 		  Klikk med mus eller tastatur på ønsket vare for å legge den til med valgt prefiks.
 		  Deretter kan du bruke enten tastatur eller mus for å øke eller redusere antallet.
@@ -78,7 +78,7 @@
 		  <p><strong style="font-size: 15px;">Lim inn og fiks handlelister:</strong>
 			Du kan også lime inn skrevne handlelister og jobbe videre med dem her. På samme måte som når
 			du skriver "8 poteter" og det automatisk blir til "8 stk. poteter", vil den fikse alle linjer med valgt
-			prefiks dersom du trykker "Ctrl + 1" etter at du har limt inn listen.
+			prefiks dersom du trykker på [OPPDATER] knappen etter at du har limt inn listen.
 		  </p>
 
 		  <p><strong style="font-size: 15px;">Husk å lagre:</strong>
@@ -113,10 +113,6 @@
 			<span>Senk antall</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between;">
-			<kbd>Ctrl + 1</kbd>
-			<span>Fiks alle linjer</span>
-		  </li>
-		  <li style="display: flex; justify-content: space-between;">
 			<kbd>Klikk m/VENSTRE MUSEKNAPP på valgte vare i liste 🖱️</kbd>
 			<span>Øk antall</span>
 		  </li>
@@ -126,18 +122,228 @@
 		  </li>
 		  <li style="display: flex; justify-content: space-between;">
 			<kbd>ENTER ⏎</kbd>
-			<span>Fullfør og autoformater linje</span>
+			<span>Velg og autoformater linje</span>
 		  </li>
 		</ul>
 		<div style="text-align: center;">
 		  <p class="demo-text" style="font-style: italic; color: #555;">
-		    Hvis du savner en vare i listen, er du velkommen til å sende den inn til vår e-postadresse.<br> 
+		    Hvis du savner en vare i listen, sende den gjerne inn til vår e-postadresse.<br> 
 		    Vi legger varen til ved neste oppdatering.<br>
 		    E-post: <strong>123handleliste@gmail.com</strong><br>
-		    Takk for hjelpen!
+		    Takk for hjelpen!<br><br><br><br><br>
 		  </p>
+		</div>
+		<ul style="padding-left: 0; list-style-type: none;">
+		  <li style="display: flex; justify-content: space-between;">
+			<strong style="font-size: 15px;">Hurtig forbindelser:</strong>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>6 egg</kbd>
+			<span>→ 1 stk. 6pk. egg</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>12 egg</kbd>
+			<span>→ 1 stk. 12pk. egg</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>18 egg</kbd>
+			<span>→ 1 stk. 18pk. egg</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>4pk pepsi max</kbd>
+			<span>→ 1 stk. 4pk. pepsi max 1.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>4pk cola zero</kbd>
+			<span>→ 1 stk. 4pk. coca zero 0.33l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>4pk pepsi</kbd>
+			<span>→ 1 stk. 4pk. pepsi 1.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>4pk coca cola</kbd>
+			<span>→ 1 stk. 4pk. coca-cola 1.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>melk</kbd>
+			<span>→ 1 stk. lett melk</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>solo super</kbd>
+			<span>→ 1 stk. solo super 0.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>pepsi max</kbd>
+			<span>→ 1 stk. pepsi max 1.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>pepsi</kbd>
+			<span>→ 1 stk. pepsi 1.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>sprite</kbd>
+			<span>→ 1 stk. sprite 1.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>urge</kbd>
+			<span>→ 1 stk. urge 1.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>fanta</kbd>
+			<span>→ 1 stk. fanta 1.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>cola</kbd>
+			<span>→ 1 stk. cola 1.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>first price cola</kbd>
+			<span>→ 1 stk. cola 1.5l first price u/sukker</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>munkholm</kbd>
+			<span>→ 1 stk. munkholm alkoholfri 0.33l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>coca cola</kbd>
+			<span>→ 1 stk. coca-cola 0.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>sigaretter</kbd>
+			<span>→ 1 stk. paramount 20pk sigaretter (evt. prince hvit/rød)</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>olw</kbd>
+			<span>→ 1 stk. olw cheez doodles original</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>kokesjokolade</kbd>
+			<span>→ 1 stk. freia kokesjokolade 70%</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>strømpebukse</kbd>
+			<span>→ 1 stk. strømpebukse Lamote Motelongs Tan 36/44</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>truser</kbd>
+			<span>→ 1 stk. truser pierre robert high waist (organic cotton), sort, large</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>farris</kbd>
+			<span>→ 1 stk. farris 0.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>farris lime</kbd>
+			<span>→ 1 stk. farris lime 0.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>frus</kbd>
+			<span>→ 1 stk. frus bringebær 0.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>villa</kbd>
+			<span>→ 1 stk. villa u/sukker 1.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>pærebrus</kbd>
+			<span>→ 1 stk. pærebrus u/sukker 1.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>rømmegrøt</kbd>
+			<span>→ 1 stk. fjordland rømmegrøt</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>grøt / risengrynsgrøt</kbd>
+			<span>→ 1 stk. fjordland risengrynsgrøt</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>svenske kjøttboller</kbd>
+			<span>→ 1 stk. fjordland svenske kjøttboller</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>kjøttkake</kbd>
+			<span>→ 1 stk. fjordland kjøttkake</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>fiskeboller</kbd>
+			<span>→ 1 stk. fjordland fiskeboller</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>fiskekaker</kbd>
+			<span>→ 1 stk. fjordland fiskekaker</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>torsk</kbd>
+			<span>→ 1 stk. fjordland torsk</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>raspeballer</kbd>
+			<span>→ 1 stk. fjordland raspeballer</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>sweet and sour</kbd>
+			<span>→ 1 stk. fjordland sweet and sour kylling</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>lite vaffelmix</kbd>
+			<span>→ 1 stk. lite pk. toro vaffelmix</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>stor vaffelmix</kbd>
+			<span>→ 1 stk. stor pk. toro vaffelmix</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>big one</kbd>
+			<span>→ 1 stk. big one classic</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>lasagne</kbd>
+			<span>→ 1 stk. fersk & ferdig lasagne</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>laks</kbd>
+			<span>→ 1 stk. fjordland laks</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>ananasringer</kbd>
+			<span>→ 1 stk. 3pk. ananasringer</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>porsjon snus</kbd>
+			<span>→ 1 stk. general porsjon snus</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>løs snus</kbd>
+			<span>→ 1 stk. general løs snus</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>lite pannekakemix</kbd>
+			<span>→ 1 stk. lite pk. toro pannekakemix</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>stor pannekakemix</kbd>
+			<span>→ 1 stk. stor pk. toro pannekakemix</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>hansa</kbd>
+			<span>→ 1 stk. hansa lettøl 0.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>barberblader</kbd>
+			<span>→ 1 stk. mach 3 barberblader</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>flesk og duppe</kbd>
+			<span>→ 1 stk. fersk & ferdig flesk og duppe</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between;">
+			<kbd>cola zero</kbd>
+			<span>→ 1 stk. coca zero 0.33l</span>
+		  </li>
+		</ul>
 
-	  </div>
+		
 	</div>
 
   </div>

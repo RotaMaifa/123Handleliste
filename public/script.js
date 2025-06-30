@@ -1,5 +1,4 @@
 
-
 let groceries = [];
 let currentSuggestions = [];
 let selectedIndex = -1;
@@ -9,6 +8,7 @@ const tagCycleOptions = ["(skivet)", "(ikke skivet)", "(oppskåret)", "(uten suk
 const textarea = document.getElementById("textarea");
 const suggestionsBox = document.getElementById("suggestions");
 const unitInput = document.getElementById("unitInput");
+let previousUnit = getUnit();  // Initialize with current unit
 
 function getUnit() {
   return unitInput.value.trim() || "stk.";
@@ -86,19 +86,26 @@ function getCurrentSectionItems(cursorPos) {
 }
 
 // Typing Suggestions
-textarea.addEventListener("input", () => {
+textarea.addEventListener("input", updateSuggestions);
+function updateSuggestions() {
   const cursorPos = textarea.selectionStart;
   const lines = textarea.value.split("\n");
   const lineIndex = textarea.value.substring(0, cursorPos).split("\n").length - 1;
   const currentLine = lines[lineIndex].trim();
 
-  // Extract last word after optional quantity and "stk."
-  const match = currentLine.match(/(?:\d+\s*(?:stk\.?)?\s*)?([\p{L}]{2,})$/u);
-  const query = match ? match[1] : "";
+  if (currentLine === "") {
+    currentSuggestions = [];
+    showSuggestions(currentSuggestions);
+    return;
+  }
+
+  const unit = getUnit().replace(".", "\\.");
+  const match = currentLine.match(new RegExp(`(?:\\d+\\s*(${unit})?\\s*)?([\\p{L}]{2,})$`, "u"));
+  const query = match ? match[2] : "";
 
   if (query.length > 0) {
     const sectionItems = getCurrentSectionItems(cursorPos);
-    const normalize = (str) => 
+    const normalize = (str) =>
       str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     const normalizedQuery = normalize(query);
 
@@ -128,7 +135,9 @@ textarea.addEventListener("input", () => {
   }
 
   showSuggestions(currentSuggestions);
-});
+}
+
+
 
 function showSuggestions(list) {
   suggestionsBox.innerHTML = "";
@@ -282,10 +291,11 @@ function capitalizeItemLines(text) {
 
 
 
-// Change to headline 
+// Change to headline
 textarea.addEventListener("dblclick", () => {
   const cursor = textarea.selectionStart;
   const lines = textarea.value.split("\n");
+  const currentUnit = getUnit();
 
   let charCount = 0;
 
@@ -295,10 +305,16 @@ textarea.addEventListener("dblclick", () => {
 
     if (cursor >= lineStart && cursor <= lineEnd) {
       const currentLine = lines[i].trim();
+
+      // Prevent toggling if the line is empty
+	  if (currentLine === "" || currentLine.includes(currentUnit)) {
+	    break;  // just exit, do nothing on empty lines or lines containing currentUnit
+	  }
+
       const isUnderline = currentLine.match(/^_+$/);
       const isUpperHeader = currentLine === currentLine.toUpperCase() && currentLine !== currentLine.toLowerCase();
 
-      // Case 1: Revert header → normal line
+      // Case 1: Revert header ? normal line
       if (isUpperHeader && i > 0 && lines[i - 1].trim().match(/^_+$/)) {
         const original = currentLine.toLowerCase();
         lines.splice(i - 1, 2, original); // remove underline and header, replace with original
@@ -319,7 +335,7 @@ textarea.addEventListener("dblclick", () => {
         break;
       }
 
-      // Case 3: Clicked the underline → do nothing
+      // Case 3: Clicked the underline ? do nothing
       break;
     }
 
@@ -328,43 +344,143 @@ textarea.addEventListener("dblclick", () => {
 });
 
 
+unitInput.addEventListener("change", () => {
+  const currentUnit = getUnit();
+  const oldUnitEscaped = previousUnit.replace(".", "\\.");
+  const lines = textarea.value.split("\n");
+
+  const updatedLines = lines.map(line => {
+    const match = line.match(new RegExp(`^(\\d+)\\s*${oldUnitEscaped}\\s+(.*)$`, "i"));
+    return match ? `${match[1]} ${currentUnit} ${match[2]}` : line;
+  });
+
+  textarea.value = updatedLines.join("\n");
+  previousUnit = currentUnit;
+});
+
+// Helper to check if line is the exact same as suggestion + prefix +(tagRegex?)
+function lineMatchesSuggestion(line, suggestionText) {
+  // Escape the unit and suggestionText for regex
+  const unitEscaped = getUnit().replace(".", "\\.");
+  const suggestionEscaped = suggestionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  // Build regex for tags (all except "none"), escaped and joined with |
+  const tags = tagCycleOptions
+    .filter(tag => tag !== "none")
+    .map(tag => tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join("|");
+
+  // The tag part is optional (zero or one) with possible whitespace before it
+  const tagPart = tags ? `(\\s+(${tags}))?` : "";
+
+  const regex = new RegExp(
+    `^(\\d+)\\s*${unitEscaped}\\s+${suggestionEscaped}${tagPart}$`,
+    "i"
+  );
+
+  return regex.test(line.trim());
+}
+
+function checkLine(cursor, lines) {
+  // Get line index based on cursor position
+  const lineIndex = textarea.value.substring(0, cursor).split("\n").length - 1;
+  const currentLine = lines[lineIndex].trim();
+  const normalizedLine = currentLine.normalize("NFC");
+
+  // Check if line is empty, only underscores, or all uppercase
+  const isEmptyLine = currentLine === "";
+  const isUnderline = currentLine === "__________________________________";
+  const isAllCaps = /^[A-Z���0-9 .\-()]+$/.test(normalizedLine) &&
+                    normalizedLine === normalizedLine.toUpperCase();
+
+  return isEmptyLine || isUnderline || isAllCaps;
+}
+
+	
+// Key Handling
+function checkLine(cursor, lines) {
+  // Get line index based on cursor position
+  const lineIndex = textarea.value.substring(0, cursor).split("\n").length - 1;
+  const currentLine = lines[lineIndex].trim();
+  const normalizedLine = currentLine.normalize("NFC");
+
+  // Check if line is empty, only underscores, or all uppercase
+  const isEmptyLine = currentLine === "";
+  const isUnderline = currentLine === "__________________________________";
+  const isAllCaps = /^[A-Z���0-9 .\-()]+$/.test(normalizedLine) &&
+                    normalizedLine === normalizedLine.toUpperCase();
+
+  return isEmptyLine || isUnderline || isAllCaps;
+}
+
 // Key Handling
 textarea.addEventListener("keydown", (e) => {
   const lines = textarea.value.split("\n");
-  const cursor = textarea.selectionStart;
+  const cursorPos = textarea.selectionStart;
+  const lineIndex = textarea.value.substring(0, cursorPos).split("\n").length - 1;
+  const currentLine = lines[lineIndex].trim().toLowerCase();
+  const isArrowKey = e.key === "ArrowUp" || e.key === "ArrowDown";
 
-  // Suggestion navigation
   if (suggestionsBox.style.display === "block" && !e.ctrlKey) {
     const items = suggestionsBox.querySelectorAll("li");
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      selectedIndex = (selectedIndex + 1) % items.length;
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      selectedIndex = (selectedIndex - 1 + items.length) % items.length;
-	} else if (e.key === "Enter" && selectedIndex >= 0) {
-	  const selectedItem = items[selectedIndex];
-	  if (selectedItem.classList.contains("placeholder")) {
-		return; // Don't insert placeholders like "index"
-	  }
 
-	  const selectedText = selectedItem.textContent.trim().toLowerCase();
-	  const cursorPos = textarea.selectionStart;
-	  const lineIndex = textarea.value.substring(0, cursorPos).split("\n").length - 1;
-	  const currentLine = lines[lineIndex].trim().toLowerCase();
-
-	  const match = currentLine.match(new RegExp(`^(\\d+)?\\s*${getUnit().replace(".", "\\.")}?\\s*(.*)$`, "i"));
-	  const currentItem = match && match[2] ? match[2].toLowerCase().trim() : "";
-
-	  if (currentItem === selectedText) return; // Let Enter insert new line
-
-	  e.preventDefault();
-	  insertSelectedSuggestion(selectedItem.textContent);
-	}
-
-    items.forEach((item, idx) => {
-      item.classList.toggle("active", idx === selectedIndex);
+    // Filter valid suggestions (exclude placeholders, "ingen forslag", "index")
+    const validSuggestions = Array.from(items).filter(item => {
+      const txt = item.textContent.trim().toLowerCase();
+      return txt !== "ingen forslag" && txt !== "index" && !item.classList.contains("placeholder");
     });
+
+    const noSuggestions = validSuggestions.length === 0;
+
+    let allowSuggestionNavigation;
+
+    if (checkLine(cursorPos, lines)) {
+      allowSuggestionNavigation = false;
+    } else {
+      const oneSuggestionMatchesLine =
+        validSuggestions.length === 1 &&
+        lineMatchesSuggestion(currentLine, validSuggestions[0].textContent.trim().toLowerCase());
+
+      allowSuggestionNavigation = !noSuggestions && !oneSuggestionMatchesLine;
+    }
+
+    // Run updateSuggestions when navigating with arrows outside of suggestion navigation
+    if (isArrowKey && (!allowSuggestionNavigation || suggestionsBox.style.display !== "block")) {
+      updateSuggestions();
+    }
+
+    if (allowSuggestionNavigation) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        selectedIndex = (selectedIndex + 1) % validSuggestions.length;
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        selectedIndex = (selectedIndex - 1 + validSuggestions.length) % validSuggestions.length;
+      }
+    }
+
+    if (e.key === "Enter" && selectedIndex >= 0 && validSuggestions.length > 0) {
+      const selectedItem = validSuggestions[selectedIndex];
+      const selectedText = selectedItem.textContent.trim().toLowerCase();
+
+      if (selectedItem.classList.contains("placeholder") || selectedText === "ingen forslag" || selectedText === "index") {
+        return;
+      }
+
+      const match = currentLine.match(new RegExp(`^(\\d+)?\\s*${getUnit().replace(".", "\\.")}?\\s*(.*)$`, "i"));
+      const currentItem = match && match[2] ? match[2].toLowerCase().trim() : "";
+
+      if (currentItem === selectedText) return; // don't insert duplicate
+
+      e.preventDefault();
+      insertSelectedSuggestion(selectedItem.textContent);
+    }
+
+    // Update active class only on validSuggestions and selectedIndex
+    items.forEach(item => item.classList.remove("active"));
+    if (selectedIndex >= 0 && allowSuggestionNavigation) {
+      validSuggestions[selectedIndex].classList.add("active");
+    }
   }
 
   // Auto-fix line on Enter
@@ -382,17 +498,16 @@ textarea.addEventListener("keydown", (e) => {
         const originalLine = lines[i];
         const fixedLine = autoFixLine(originalLine.trim());
 
-		if (originalLine !== fixedLine) {
-		  e.preventDefault(); // Stop default Enter
+        if (originalLine !== fixedLine) {
+          e.preventDefault(); // Stop default Enter
 
-		  lines[i] = fixedLine;
-		  textarea.value = lines.join("\n");
+          lines[i] = fixedLine;
+          textarea.value = lines.join("\n");
 
-		  // Move cursor to next line (without extra line)
-		  const newCursor = lines.slice(0, i + 1).join("\n").length + 1;
-		  textarea.selectionStart = textarea.selectionEnd = newCursor;
-		}
-
+          // Move cursor to next line (without extra line)
+          const newCursor = lines.slice(0, i + 1).join("\n").length + 1;
+          textarea.selectionStart = textarea.selectionEnd = newCursor;
+        }
 
         break;
       }
@@ -401,14 +516,13 @@ textarea.addEventListener("keydown", (e) => {
     }
   }
 
-
   // Ctrl + Up/Down: Adjust quantity
   if (e.ctrlKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
     e.preventDefault();
     let charCount = 0;
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      if (cursor >= charCount && cursor <= charCount + line.length) {
+      if (cursorPos >= charCount && cursorPos <= charCount + line.length) {
         let match = line.match(new RegExp(`^(\\d+)\\s*${getUnit().replace(".", "\\.")}\\s+(.*)`));
         if (match) {
           let qty = parseInt(match[1]);
@@ -416,35 +530,24 @@ textarea.addEventListener("keydown", (e) => {
           if (qty < 1) qty = 1;
           lines[i] = `${qty} ${getUnit()} ${match[2]}`;
           textarea.value = lines.join("\n");
-          textarea.selectionStart = textarea.selectionEnd = cursor;
+          textarea.selectionStart = textarea.selectionEnd = cursorPos;
           break;
         }
       }
       charCount += line.length + 1;
     }
   }
-  
-  // Ctrl + 1: Auto-format unformatted lines 
-  if (e.ctrlKey && e.key === "1") {
-    e.preventDefault();
-    const lines = textarea.value.split("\n");
-    const fixedLines = lines.map((line) => autoFixLine(line)).join("\n");
-    textarea.value = capitalizeItemLines(fixedLines);
-  }
 
   // Ctrl + Space: Cycle tags
   if (e.ctrlKey && e.code === "Space") {
     e.preventDefault();
-
-    const cursor = textarea.selectionStart;
-    const lines = textarea.value.split("\n");
 
     let charCount = 0;
     for (let i = 0; i < lines.length; i++) {
       const lineStart = charCount;
       const lineEnd = charCount + lines[i].length;
 
-      if (cursor >= lineStart && cursor <= lineEnd + 1) {
+      if (cursorPos >= lineStart && cursorPos <= lineEnd + 1) {
         let line = lines[i];
 
         // Build regex to match any tag in the options list (except "none")
@@ -477,8 +580,6 @@ textarea.addEventListener("keydown", (e) => {
       charCount += lines[i].length + 1;
     }
   }
-
-
 });
 
 
@@ -496,105 +597,21 @@ function capitalizeWords(text) {
 function autoFixLine(line) {
   if (!line) return "";
 
-  // Fix known typos
-  line = line.replace(/\bmalk\b/gi, "melk");
+  // Detect if line ends with a tag
+  const tags = tagCycleOptions
+    .filter(tag => tag !== "none")
+    .map(tag => tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join("|");
+  const tagRegex = new RegExp(`\\s*(${tags})$`, "i");
 
-  // Fast packs auto fix
-  const replacements_packs = [   
-    { match: /^\d*\s*6\.?\s*egg$/i, replaceWith: "6pk. egg" },
-	{ match: /^\d*\s*12\.?\s*egg$/i, replaceWith: "12pk. egg" },
-	{ match: /^\d*\s*18\.?\s*egg$/i, replaceWith: "18pk. egg" },
-    { match: /^\d*\s*6pk\.?\s*egg$/i, replaceWith: "6pk. egg" },
-	{ match: /^\d*\s*12pk\.?\s*egg$/i, replaceWith: "12pk. egg" },
-	{ match: /^\d*\s*18pk\.?\s*egg$/i, replaceWith: "18pk. egg" },
-    { match: /^\d*\s*4pk\.?\s*pepsi max$/i, replaceWith: "4pk. pepsi max 1.5l" },
-    { match: /^\d*\s*4pk\.?\s*co(?:la|ca) zero$/i, replaceWith: "4pk. coca zero 0.33l" },
-    { match: /^\d*\s*4pk\.?\s*pepsi$/i, replaceWith: "4pk. pepsi 1.5l" },
-    { match: /^\d*\s*4pk\.?\s*coca cola$/i, replaceWith: "4pk. coca-cola 1.5l" },
-  ];
-
-  line = line.trim();
-
-  for (const { match, replaceWith } of replacements_packs) {
-    if (match.test(line)) {
-      // Replace only the matching part, so use .replace with the regex
-      line = line.replace(match, replaceWith);
-      break; // Exit loop after first match if only one replacement per line
-    }
-  }  
-
-  
-  // Fast single unit auto fix
-  const replacements = [  
-	{ match: /^\d*\s*melk$/i, replaceWith: "lett melk" },
-    { match: /^\d*\s*solo super$/i, replaceWith: "solo super 0.5l" },
-    { match: /^\d*\s*pepsi max$/i, replaceWith: "pepsi max 1.5l" },	
-    { match: /^\d*\s*pepsi$/i, replaceWith: "pepsi 1.5l" },
-	{ match: /^\d*\s*sprite$/i, replaceWith: "sprite 1.5l" },
-	{ match: /^\d*\s*urge$/i, replaceWith: "urge 1.5l" },
-	{ match: /^\d*\s*fanta$/i, replaceWith: "fanta 1.5l" },
-	{ match: /^\d*\s*cola$/i, replaceWith: "cola 1.5l" },
-    { match: /^\d*\s*first price cola$/i, replaceWith: "cola 1.5l first price u/sukker" },
-    { match: /^\d*\s*munkholm$/i, replaceWith: "munkholm alkoholfri 0.33l" },
-    { match: /^\d*\s*coca cola$/i, replaceWith: "coca-cola 0.5l" },
-    { match: /^\d*\s*sigaretter$/i, replaceWith: "paramount 20pk sigaretter. (om dere ikke har paramount, ta da prince hvit/rød.)" },
-    { match: /^\d*\s*olw$/i, replaceWith: "olw cheez doodles original" },
-    { match: /^\d*\s*kokesjokolade$/i, replaceWith: "freia kokesjokolade 70%" },
-    { match: /^\d*\s*strømpebukse$/i, replaceWith: "strømpebukse Lamote Motelongs Tan 36/44" },
-    { match: /^\d*\s*truser$/i, replaceWith: "truser pierre robert high waist (organic cotton). sort. str. large" },
-	{ match: /^\d*\s*farris$/i, replaceWith: "farris 0.5l" },
-	{ match: /^\d*\s*farris lime$/i, replaceWith: "farris lime 0.5l" },
-    { match: /^\d*\s*frus$/i, replaceWith: "frus bringebær 0.5l" },
-	{ match: /^\d*\s*villa$/i, replaceWith: "villa u/sukker 1.5l" },
-	{ match: /^\d*\s*pærebrus$/i, replaceWith: "pærebrus u/sukker 1.5l" },
-	{ match: /^\d*\s*rømmegrøt$/i, replaceWith: "fjordland rømmegrøt" },
-	{ match: /^\d*\s*grøt$/i, replaceWith: "fjordland risengrynsgrøt" },
-	{ match: /^\d*\s*risengrynsgrøt$/i, replaceWith: "fjordland risengrynsgrøt" },
-	{ match: /^\d*\s*svenske kjøttboller$/i, replaceWith: "fjordland svenske kjøttboller" },
-	{ match: /^\d*\s*kjøttkake$/i, replaceWith: "fjordland kjøttkake" },
-	{ match: /^\d*\s*fiskeboller$/i, replaceWith: "fjordland fiskeboller" },
-	{ match: /^\d*\s*fiskekaker$/i, replaceWith: "fjordland fiskekaker" },
-	{ match: /^\d*\s*torsk$/i, replaceWith: "fjordland torsk" },
-	{ match: /^\d*\s*raspeballer$/i, replaceWith: "fjordland raspeballer" },
-	{ match: /^\d*\s*sweet and sour kylling$/i, replaceWith: "fjordland sweet and sour kylling" },
-	{ match: /^\d*\s*lite vaffelmix$/i, replaceWith: "lite pk. toro vaffelmix" },
-	{ match: /^\d*\s*stor vaffelmix$/i, replaceWith: "stor pk. toro vaffelmix" },
-	{ match: /^\d*\s*big one$/i, replaceWith: "big one classic" },
-	{ match: /^\d*\s*lasagne$/i, replaceWith: "fersk & ferdig lasagne" },	
-	{ match: /^\d*\s*laks$/i, replaceWith: "fjordland laks" },
-	{ match: /^\d*\s*ananasringer$/i, replaceWith: "3pk. ananasringer" },
-	{ match: /^\d*\s*porsjon snus$/i, replaceWith: "general porsjon snus" },
-	{ match: /^\d*\s*løs snus$/i, replaceWith: "general løs snus" },
-	{ match: /^\d*\s*lite pannekakemix$/i, replaceWith: "lite pk. toro pannekakemix" },
-	{ match: /^\d*\s*stor pannekakemix$/i, replaceWith: "stor pk. toro pannekakemix" },
-	{ match: /^\d*\s*hansa$/i, replaceWith: "hansa lettøl 0.5l" },
-	{ match: /^\d*\s*barberblader$/i, replaceWith: "mach 3 barberblader	" },
-	{ match: /^\d*\s*flesk og duppe$/i, replaceWith: "fersk & ferdig flesk og duppe " },
-	{ match: /^\d*\s*cola zero$/i, replaceWith: "coca zero 0.33l " }
-
-  ];
-
-  line = line.trim();
-
-  const numberAndItemMatch = line.match(/^(\d*)\s*(.*)$/);
-
-  if (numberAndItemMatch) {
-    const numberPart = numberAndItemMatch[1]; // the digits (if any)
-    const itemPart = numberAndItemMatch[2];   // the product description
-
-    for (const { match, replaceWith } of replacements) {
-      if (match.test(itemPart)) {
-        // Replace only inside the item part
-        const newItem = itemPart.replace(match, replaceWith);
-        // Rebuild line preserving number and spacing
-        line = (numberPart ? numberPart + " " : "") + newItem;
-        break; // stop after first match
-      }
-    }
+  const tagMatch = line.match(tagRegex);
+  let tag = "";
+  if (tagMatch) {
+    tag = tagMatch[0].trim(); // tag including leading space
+    line = line.replace(tagRegex, "").trim(); // remove tag for fixing
   }
 
-  line = line.trim();
-  if (!line) return "";
+  line = fixKnownTyposAndProducts(line);
 
   const normalizedGroceries = groceries.map(g => g.toLowerCase());
 
@@ -604,19 +621,23 @@ function autoFixLine(line) {
     const quantity = match[1];
     const itemName = match[2].toLowerCase().trim();
     if (normalizedGroceries.includes(itemName)) {
-      return `${quantity} ${getUnit()} ${capitalizeWords(itemName)}`;
+      line = `${quantity} ${getUnit()} ${capitalizeWords(itemName)}`;
     }
   }
 
   // Match: "lett melk" (no quantity)
   if (normalizedGroceries.includes(line.toLowerCase())) {
-    return `1 ${getUnit()} ${capitalizeWords(line.toLowerCase())}`;
+    line = `1 ${getUnit()} ${capitalizeWords(line.toLowerCase())}`;
+  }
+
+  // Append tag back
+  if (tag) {
+    line += ` ${tag}`;
   }
 
   return line;
-  
-
 }
+
 
 const helpBtn = document.getElementById("helpBtn");
 const helpModal = document.getElementById("helpModal");
@@ -647,7 +668,6 @@ document.getElementById("copyBtn").addEventListener("click", () => {
       console.error("Kopiering feilet:", err);
       messageBox.textContent = "Kopiering mislyktes. Prøv igjen.";
       messageBox.classList.remove("hidden");
-      messageBox.style.backgroundColor = "#f8d7da"; // red background for error
       messageBox.style.color = "#721c24";           // dark red text
       messageBox.style.border = "1px solid #f5c6cb";
       setTimeout(() => {
@@ -656,11 +676,162 @@ document.getElementById("copyBtn").addEventListener("click", () => {
     });
 });
 
+
 // OPPDATER
 document.getElementById("updateBtn").addEventListener("click", (e) => {
-    e.preventDefault(); // Nå er 'e' definert
-    const textarea = document.getElementById("textarea"); // sørg for at du refererer til eksisterende element
-    const lines = textarea.value.split("\n");
-    const fixedLines = lines.map((line) => autoFixLine(line)).join("\n");
-    textarea.value = capitalizeItemLines(fixedLines);
+  e.preventDefault();
+
+  const textarea = document.getElementById("textarea");
+  const lines = textarea.value.split("\n");
+  const currentPrefix = getUnit(); // e.g. "stk."
+
+  const normalizedGroceries = groceries.map(g => g.toLowerCase());
+
+  const updatedLines = lines.map((line) => {
+    // Fix known typos and variants first
+    const fixedLine = fixKnownTyposAndProducts(line);
+
+    // Normalize prefixes & add current prefix
+    return normalizeLinePrefix(fixedLine, currentPrefix, normalizedGroceries);
+  });
+
+  textarea.value = capitalizeItemLines(updatedLines.join("\n"));
 });
+
+
+function normalizeLinePrefix(line, prefix, normalizedGroceries) {
+  const trimmed = line.trim();
+  if (!trimmed) return "";
+
+  // Match quantity and rest of line
+  const match = trimmed.match(/^(\d+)\s+(.+)$/);
+  if (!match) return trimmed;
+
+  const quantity = match[1];
+  let itemText = match[2].trim();
+
+  // Remove old prefixes (#, stk., pk., etc.) from start
+  itemText = itemText.replace(/^(#|stk\.|pk\.|stk|pk)\s*/i, "").trim();
+
+  // Lowercase for matching
+  const itemNameLower = itemText.toLowerCase();
+
+  // Check if item is in groceries list
+  if (normalizedGroceries.includes(itemNameLower)) {
+    return `${quantity} ${prefix} ${itemText}`;
+  }
+
+  // Try split with sub-prefix (like "stk. ketchup")
+  const subMatch = itemText.match(/^([^\s]+)\s+(.*)$/);
+  if (subMatch) {
+    const maybePrefix = subMatch[1].toLowerCase();
+    const rest = subMatch[2].trim();
+
+    const fullLower = `${maybePrefix} ${rest}`.toLowerCase();
+
+    if (normalizedGroceries.includes(fullLower)) {
+      return `${quantity} ${prefix} ${rest}`;
+    }
+
+    if (normalizedGroceries.includes(rest.toLowerCase())) {
+      return `${quantity} ${prefix} ${rest}`;
+    }
+  }
+
+  // If no match, still add prefix
+  return `${quantity} ${prefix} ${itemText}`;
+}
+
+// Shared utility: Fix known typos and product variants
+function fixKnownTyposAndProducts(line) {
+  if (!line) return "";
+
+  line = line.replace(/\bmalk\b/gi, "melk");
+  line = line.trim();
+
+  // Pack replacements
+  const replacements_packs = [   
+    { match: /^\d*\s*6\.?\s*egg$/i, replaceWith: "6pk. egg" },
+    { match: /^\d*\s*12\.?\s*egg$/i, replaceWith: "12pk. egg" },
+    { match: /^\d*\s*18\.?\s*egg$/i, replaceWith: "18pk. egg" },
+    { match: /^\d*\s*6pk\.?\s*egg$/i, replaceWith: "6pk. egg" },
+    { match: /^\d*\s*12pk\.?\s*egg$/i, replaceWith: "12pk. egg" },
+    { match: /^\d*\s*18pk\.?\s*egg$/i, replaceWith: "18pk. egg" },
+    { match: /^\d*\s*4pk\.?\s*pepsi max$/i, replaceWith: "4pk. pepsi max 1.5l" },
+    { match: /^\d*\s*4pk\.?\s*co(?:la|ca) zero$/i, replaceWith: "4pk. coca zero 0.33l" },
+    { match: /^\d*\s*4pk\.?\s*pepsi$/i, replaceWith: "4pk. pepsi 1.5l" },
+    { match: /^\d*\s*4pk\.?\s*coca cola$/i, replaceWith: "4pk. coca-cola 1.5l" },
+  ];
+
+  for (const { match, replaceWith } of replacements_packs) {
+    if (match.test(line)) {
+      line = line.replace(match, replaceWith);
+      return line.trim();
+    }
+  }
+
+  // Single product replacements
+  const replacements = [  
+    { match: /^\d*\s*melk$/i, replaceWith: "lett melk" },
+    { match: /^\d*\s*solo super$/i, replaceWith: "solo super 0.5l" },
+    { match: /^\d*\s*pepsi max$/i, replaceWith: "pepsi max 1.5l" },
+    { match: /^\d*\s*pepsi$/i, replaceWith: "pepsi 1.5l" },
+    { match: /^\d*\s*sprite$/i, replaceWith: "sprite 1.5l" },
+    { match: /^\d*\s*urge$/i, replaceWith: "urge 1.5l" },
+    { match: /^\d*\s*fanta$/i, replaceWith: "fanta 1.5l" },
+    { match: /^\d*\s*cola$/i, replaceWith: "cola 1.5l" },
+    { match: /^\d*\s*first price cola$/i, replaceWith: "cola 1.5l first price u/sukker" },
+    { match: /^\d*\s*munkholm$/i, replaceWith: "munkholm alkoholfri 0.33l" },
+    { match: /^\d*\s*coca cola$/i, replaceWith: "coca-cola 0.5l" },
+    { match: /^\d*\s*sigaretter$/i, replaceWith: "paramount 20pk sigaretter. (om dere ikke har paramount, ta da prince hvit/rød.)" },
+    { match: /^\d*\s*olw$/i, replaceWith: "olw cheez doodles original" },
+    { match: /^\d*\s*kokesjokolade$/i, replaceWith: "freia kokesjokolade 70%" },
+    { match: /^\d*\s*strømpebukse$/i, replaceWith: "strømpebukse Lamote Motelongs Tan 36/44" },
+    { match: /^\d*\s*truser$/i, replaceWith: "truser pierre robert high waist (organic cotton). sort. str. large" },
+    { match: /^\d*\s*farris$/i, replaceWith: "farris 0.5l" },
+    { match: /^\d*\s*farris lime$/i, replaceWith: "farris lime 0.5l" },
+    { match: /^\d*\s*frus$/i, replaceWith: "frus bringebær 0.5l" },
+    { match: /^\d*\s*villa$/i, replaceWith: "villa u/sukker 1.5l" },
+    { match: /^\d*\s*pærebrus$/i, replaceWith: "pærebrus u/sukker 1.5l" },
+    { match: /^\d*\s*rømmegrøt$/i, replaceWith: "fjordland rømmegrøt" },
+    { match: /^\d*\s*grøt$/i, replaceWith: "fjordland risengrynsgrøt" },
+    { match: /^\d*\s*risengrynsgrøt$/i, replaceWith: "fjordland risengrynsgrøt" },
+    { match: /^\d*\s*svenske kjøttboller$/i, replaceWith: "fjordland svenske kjøttboller" },
+    { match: /^\d*\s*kjøttkake$/i, replaceWith: "fjordland kjøttkake" },
+    { match: /^\d*\s*fiskeboller$/i, replaceWith: "fjordland fiskeboller" },
+    { match: /^\d*\s*fiskekaker$/i, replaceWith: "fjordland fiskekaker" },
+    { match: /^\d*\s*torsk$/i, replaceWith: "fjordland torsk" },
+    { match: /^\d*\s*raspeballer$/i, replaceWith: "fjordland raspeballer" },
+    { match: /^\d*\s*sweet and sour$/i, replaceWith: "fjordland sweet and sour kylling" },
+    { match: /^\d*\s*lite vaffelmix$/i, replaceWith: "lite pk. toro vaffelmix" },
+    { match: /^\d*\s*stor vaffelmix$/i, replaceWith: "stor pk. toro vaffelmix" },
+    { match: /^\d*\s*big one$/i, replaceWith: "big one classic" },
+    { match: /^\d*\s*lasagne$/i, replaceWith: "fersk & ferdig lasagne" },
+    { match: /^\d*\s*laks$/i, replaceWith: "fjordland laks" },
+    { match: /^\d*\s*ananasringer$/i, replaceWith: "3pk. ananasringer" },
+    { match: /^\d*\s*porsjon snus$/i, replaceWith: "general porsjon snus" },
+    { match: /^\d*\s*løs snus$/i, replaceWith: "general løs snus" },
+    { match: /^\d*\s*lite pannekakemix$/i, replaceWith: "lite pk. toro pannekakemix" },
+    { match: /^\d*\s*stor pannekakemix$/i, replaceWith: "stor pk. toro pannekakemix" },
+    { match: /^\d*\s*hansa$/i, replaceWith: "hansa lettøl 0.5l" },
+    { match: /^\d*\s*barberblader$/i, replaceWith: "mach 3 barberblader" },
+    { match: /^\d*\s*flesk og duppe$/i, replaceWith: "fersk & ferdig flesk og duppe" },
+    { match: /^\d*\s*cola zero$/i, replaceWith: "coca zero 0.33l" },
+  ];
+
+  const numberAndItemMatch = line.match(/^(\d*)\s*(.*)$/);
+  if (numberAndItemMatch) {
+    const numberPart = numberAndItemMatch[1];
+    const itemPart = numberAndItemMatch[2];
+
+    for (const { match, replaceWith } of replacements) {
+      if (match.test(itemPart)) {
+        const newItem = itemPart.replace(match, replaceWith);
+        line = (numberPart ? numberPart + " " : "") + newItem;
+        return line.trim();
+      }
+    }
+  }
+
+  return line.trim();
+}
