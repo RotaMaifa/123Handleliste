@@ -4,7 +4,9 @@ let currentSuggestions = [];
 let selectedIndex = -1;
 let tagCycleIndex = 0;
 
-const tagCycleOptions = ["(skivet)", "(ikke skivet)", "(oppskåret)", "(uten sukker)", "(rimeligste)", "(first price)","none"];
+
+
+const tagCycleOptions = ["(uten sukker)", "(oppskåret)", "(skivet)", "(ikke skivet)",  "(rimeligste)", "(first price)","none"];
 const textarea = document.getElementById("textarea");
 const suggestionsBox = document.getElementById("suggestions");
 const unitInput = document.getElementById("unitInput");
@@ -250,7 +252,7 @@ function triggerSuggestionFromCursor() {
     currentSuggestions = groceries.filter(item => item.toLowerCase().trim() === query);
     showSuggestions(currentSuggestions);
   } else {
-    suggestionsBox.style.display = "index";
+    suggestionsBox.style.display = "Ingen forslag";
   }
 }
 
@@ -424,10 +426,10 @@ textarea.addEventListener("keydown", (e) => {
   if (suggestionsBox.style.display === "block" && !e.ctrlKey) {
     const items = suggestionsBox.querySelectorAll("li");
 
-    // Filter valid suggestions (exclude placeholders, "ingen forslag", "index")
+    // Filter valid suggestions (exclude placeholders, "Ingen forslag", "index")
     const validSuggestions = Array.from(items).filter(item => {
       const txt = item.textContent.trim().toLowerCase();
-      return txt !== "ingen forslag" && txt !== "index" && !item.classList.contains("placeholder");
+      return txt !== "Ingen forslag" && txt !== "Begynn å skrive dagligvarelisten" && !item.classList.contains("placeholder");
     });
 
     const noSuggestions = validSuggestions.length === 0;
@@ -443,13 +445,7 @@ textarea.addEventListener("keydown", (e) => {
 
       allowSuggestionNavigation = !noSuggestions && !oneSuggestionMatchesLine;
 	  
-      // Run updateSuggestions when navigating with arrows outside of suggestion navigation
-      if (isArrowKey && (!allowSuggestionNavigation || suggestionsBox.style.display !== "block")) {
-        updateSuggestions();
-      }
     }
-
-
 
     if (allowSuggestionNavigation) {
       if (e.key === "ArrowDown") {
@@ -459,13 +455,21 @@ textarea.addEventListener("keydown", (e) => {
         e.preventDefault();
         selectedIndex = (selectedIndex - 1 + validSuggestions.length) % validSuggestions.length;
       }
+	  
+	} else {  
+	
+      // Run updateSuggestions when navigating with arrows outside of suggestion navigation
+      if (isArrowKey && (!allowSuggestionNavigation || suggestionsBox.style.display !== "block")) {
+        updateSuggestions();
+      } 
+	  
     }
 
     if (e.key === "Enter" && selectedIndex >= 0 && validSuggestions.length > 0) {
       const selectedItem = validSuggestions[selectedIndex];
       const selectedText = selectedItem.textContent.trim().toLowerCase();
 
-      if (selectedItem.classList.contains("placeholder") || selectedText === "ingen forslag" || selectedText === "index") {
+      if (selectedItem.classList.contains("placeholder") || selectedText === "Ingen forslag" || selectedText === "index") {
         return;
       }
 
@@ -744,25 +748,69 @@ function normalizeLinePrefix(line, prefix, normalizedGroceries) {
   return `${quantity} ${prefix} ${itemText}`;
 }
 
+
 // Shared utility: Fix known typos and product variants
 function fixKnownTyposAndProducts(line) {
   if (!line) return "";
 
-  line = line.replace(/\bmalk\b/gi, "melk");
+  const softDrinkKeywords = [
+    "coca zero",
+    "coca-cola",
+    "cola",
+    "cola zero",
+    "fanta (uten sukker)",
+    "fanta",
+    "fanta lemon",
+    "pepsi",
+    "pepsi lime",
+    "pepsi max",
+    "pepsi max mango",
+    "solo",
+    "solo super",
+    "frus",
+    "frus bringebær",
+    "farris",
+    "farris lime",
+    "pærebrus (uten sukker)",
+    "solo super rød – rabarbra",
+    "sprite zero",
+    "urge (uten sukker)",
+    "urge",
+    "villa (uten sukker)",
+    "villa"
+  ];
+
+  const lineLower = line.toLowerCase();
+  const containsSoftDrinkKeyword = softDrinkKeywords.some(keyword =>
+    lineLower.includes(keyword.toLowerCase())
+  );
+
+  if (containsSoftDrinkKeyword) {
+    line = line.replace(/\bb\b/gi, "boks");
+    line = line.replace(/\bl\b/gi, "liten");
+    line = line.replace(/\bs\b/gi, "stor");
+  }
+  line = line.replace(/\bmalk\b/gi, "melk"); // Special 
   line = line.trim();
+
 
   // Pack replacements
   const replacements_packs = [   
-    { match: /^\d*\s*6\.?\s*egg$/i, replaceWith: "6pk. egg" },
-    { match: /^\d*\s*12\.?\s*egg$/i, replaceWith: "12pk. egg" },
-    { match: /^\d*\s*18\.?\s*egg$/i, replaceWith: "18pk. egg" },
     { match: /^\d*\s*6pk\.?\s*egg$/i, replaceWith: "6pk. egg" },
     { match: /^\d*\s*12pk\.?\s*egg$/i, replaceWith: "12pk. egg" },
     { match: /^\d*\s*18pk\.?\s*egg$/i, replaceWith: "18pk. egg" },
     { match: /^\d*\s*4pk\.?\s*pepsi max$/i, replaceWith: "4pk. pepsi max 1.5l" },
     { match: /^\d*\s*4pk\.?\s*co(?:la|ca) zero$/i, replaceWith: "4pk. coca zero 0.33l" },
     { match: /^\d*\s*4pk\.?\s*pepsi$/i, replaceWith: "4pk. pepsi 1.5l" },
-    { match: /^\d*\s*4pk\.?\s*coca cola$/i, replaceWith: "4pk. coca-cola 1.5l" },
+    { match: /^\d*\s*4pk\.?\s*coca cola$/i, replaceWith: "4pk. coca-cola 1.5l" },	
+    { match: /^\d*\s*6 pk\.?\s*egg$/i, replaceWith: "6pk. egg" },
+    { match: /^\d*\s*12 pk\.?\s*egg$/i, replaceWith: "12pk. egg" },
+    { match: /^\d*\s*18 pk\.?\s*egg$/i, replaceWith: "18pk. egg" },
+    { match: /^\d*\s*4 pk\.?\s*pepsi max$/i, replaceWith: "4pk. pepsi max 1.5l" },
+    { match: /^\d*\s*4 pk\.?\s*co(?:la|ca) zero$/i, replaceWith: "4pk. coca zero 0.33l" },
+    { match: /^\d*\s*4 pk\.?\s*pepsi$/i, replaceWith: "4pk. pepsi 1.5l" },
+    { match: /^\d*\s*4 pk\.?\s*coca cola$/i, replaceWith: "4pk. coca-cola 1.5l" }
+
   ];
 
   for (const { match, replaceWith } of replacements_packs) {
@@ -773,7 +821,10 @@ function fixKnownTyposAndProducts(line) {
   }
 
   // Single product replacements
-  const replacements = [  
+  const replacements = [ 
+    { match: /^\d*\s*6 egg$/i, replaceWith: "6pk. egg" },
+    { match: /^\d*\s*12 egg$/i, replaceWith: "12pk. egg" },
+    { match: /^\d*\s*18 egg$/i, replaceWith: "18pk. egg" },
     { match: /^\d*\s*melk$/i, replaceWith: "lett melk" },
     { match: /^\d*\s*solo super$/i, replaceWith: "solo super 0.5l" },
     { match: /^\d*\s*pepsi max$/i, replaceWith: "pepsi max 1.5l" },
@@ -782,7 +833,7 @@ function fixKnownTyposAndProducts(line) {
     { match: /^\d*\s*urge$/i, replaceWith: "urge 1.5l" },
     { match: /^\d*\s*fanta$/i, replaceWith: "fanta 1.5l" },
     { match: /^\d*\s*cola$/i, replaceWith: "cola 1.5l" },
-    { match: /^\d*\s*first price cola$/i, replaceWith: "cola 1.5l first price u/sukker" },
+    { match: /^\d*\s*first price cola$/i, replaceWith: "cola 1.5l first price (uten sukker)" },
     { match: /^\d*\s*munkholm$/i, replaceWith: "munkholm alkoholfri 0.33l" },
     { match: /^\d*\s*coca cola$/i, replaceWith: "coca-cola 0.5l" },
     { match: /^\d*\s*sigaretter$/i, replaceWith: "paramount 20pk sigaretter. (om dere ikke har paramount, ta da prince hvit/rød.)" },
@@ -793,8 +844,8 @@ function fixKnownTyposAndProducts(line) {
     { match: /^\d*\s*farris$/i, replaceWith: "farris 0.5l" },
     { match: /^\d*\s*farris lime$/i, replaceWith: "farris lime 0.5l" },
     { match: /^\d*\s*frus$/i, replaceWith: "frus bringebær 0.5l" },
-    { match: /^\d*\s*villa$/i, replaceWith: "villa u/sukker 1.5l" },
-    { match: /^\d*\s*pærebrus$/i, replaceWith: "pærebrus u/sukker 1.5l" },
+    { match: /^\d*\s*villa$/i, replaceWith: "villa 1.5l (uten sukker)" },
+    { match: /^\d*\s*pærebrus$/i, replaceWith: "pærebrus 1.5l (uten sukker)" },
     { match: /^\d*\s*rømmegrøt$/i, replaceWith: "fjordland rømmegrøt" },
     { match: /^\d*\s*grøt$/i, replaceWith: "fjordland risengrynsgrøt" },
     { match: /^\d*\s*risengrynsgrøt$/i, replaceWith: "fjordland risengrynsgrøt" },
@@ -819,6 +870,90 @@ function fixKnownTyposAndProducts(line) {
     { match: /^\d*\s*barberblader$/i, replaceWith: "mach 3 barberblader" },
     { match: /^\d*\s*flesk og duppe$/i, replaceWith: "fersk & ferdig flesk og duppe" },
     { match: /^\d*\s*cola zero$/i, replaceWith: "coca zero 0.33l" },
+	{ match: /^\d*\s*boks coca zero$/i, replaceWith: "coca zero 0.33l" },
+	{ match: /^\d*\s*liten coca zero$/i, replaceWith: "coca zero 0.5l" },
+	{ match: /^\d*\s*stor coca zero$/i, replaceWith: "coca zero 1.5l" },
+	{ match: /^\d*\s*boks coca-cola$/i, replaceWith: "coca-cola 0.33l" },
+	{ match: /^\d*\s*liten coca-cola$/i, replaceWith: "coca-cola 0.5l" },
+	{ match: /^\d*\s*stor coca-cola$/i, replaceWith: "coca-cola 1.5l" },
+	{ match: /^\d*\s*boks cola$/i, replaceWith: "cola 0.33l" },
+	{ match: /^\d*\s*liten cola$/i, replaceWith: "cola 0.5l" },
+	{ match: /^\d*\s*stor cola$/i, replaceWith: "cola 1.5l" },
+	{ match: /^\d*\s*boks cola zero$/i, replaceWith: "cola zero 0.33l" },
+	{ match: /^\d*\s*liten cola zero$/i, replaceWith: "cola zero 0.5l" },
+	{ match: /^\d*\s*stor cola zero$/i, replaceWith: "cola zero 1.5l" },
+	{ match: /^\d*\s*boks fanta$/i, replaceWith: "fanta 0.33l" },
+	{ match: /^\d*\s*liten fanta$/i, replaceWith: "fanta 0.5l" },
+	{ match: /^\d*\s*stor fanta$/i, replaceWith: "fanta 1.5l" },
+	{ match: /^\d*\s*boks fanta uten sukker$/i, replaceWith: "fanta 0.33l (uten sukker)" },
+	{ match: /^\d*\s*liten fanta uten sukker$/i, replaceWith: "fanta 0.5l (uten sukker)" },
+	{ match: /^\d*\s*stor fanta uten sukker$/i, replaceWith: "fanta 1.5l (uten sukker)" },
+	{ match: /^\d*\s*boks fanta lemon$/i, replaceWith: "fanta lemon 0.33l" },
+	{ match: /^\d*\s*liten fanta lemon$/i, replaceWith: "fanta lemon 0.5l" },
+	{ match: /^\d*\s*stor fanta lemon$/i, replaceWith: "fanta lemon 1.5l" },
+	{ match: /^\d*\s*boks pepsi$/i, replaceWith: "pepsi 0.33l" },
+	{ match: /^\d*\s*liten pepsi$/i, replaceWith: "pepsi 0.5l" },
+	{ match: /^\d*\s*stor pepsi$/i, replaceWith: "pepsi 1.5l" },
+	{ match: /^\d*\s*boks pepsi lime$/i, replaceWith: "pepsi lime 0.33l" },
+	{ match: /^\d*\s*liten pepsi lime$/i, replaceWith: "pepsi lime 0.5l" },
+	{ match: /^\d*\s*stor pepsi lime$/i, replaceWith: "pepsi lime 1.5l" },
+	{ match: /^\d*\s*boks pepsi max$/i, replaceWith: "pepsi max 0.33l" },
+	{ match: /^\d*\s*liten pepsi max$/i, replaceWith: "pepsi max 0.5l" },
+	{ match: /^\d*\s*stor pepsi max$/i, replaceWith: "pepsi max 1.5l" },
+	{ match: /^\d*\s*boks pepsi max mango$/i, replaceWith: "pepsi max mango 0.33l" },
+	{ match: /^\d*\s*liten pepsi max mango$/i, replaceWith: "pepsi max mango 0.5l" },
+	{ match: /^\d*\s*stor pepsi max mango$/i, replaceWith: "pepsi max mango 1.5l" },
+	{ match: /^\d*\s*boks solo$/i, replaceWith: "solo 0.33l" },
+	{ match: /^\d*\s*liten solo$/i, replaceWith: "solo 0.5l" },
+	{ match: /^\d*\s*stor solo$/i, replaceWith: "solo 1.5l" },
+	{ match: /^\d*\s*boks solo super$/i, replaceWith: "solo super 0.33l" },
+	{ match: /^\d*\s*liten solo super$/i, replaceWith: "solo super 0.5l" },
+	{ match: /^\d*\s*stor solo super$/i, replaceWith: "solo super 1.5l" },
+	{ match: /^\d*\s*boks frus$/i, replaceWith: "frus 0.33l" },
+	{ match: /^\d*\s*liten frus$/i, replaceWith: "frus 0.5l" },
+	{ match: /^\d*\s*stor frus$/i, replaceWith: "frus 1.5l" },
+	{ match: /^\d*\s*boks frus bringebær$/i, replaceWith: "frus bringebær 0.33l" },
+	{ match: /^\d*\s*liten frus bringebær$/i, replaceWith: "frus bringebær 0.5l" },
+	{ match: /^\d*\s*stor frus bringebær$/i, replaceWith: "frus bringebær 1.5l" },
+	{ match: /^\d*\s*boks farris$/i, replaceWith: "farris 0.33l" },
+	{ match: /^\d*\s*liten farris$/i, replaceWith: "farris 0.5l" },
+	{ match: /^\d*\s*stor farris$/i, replaceWith: "farris 1.5l" },
+	{ match: /^\d*\s*boks farris lime$/i, replaceWith: "farris lime 0.33l" },
+	{ match: /^\d*\s*liten farris lime$/i, replaceWith: "farris lime 0.5l" },
+	{ match: /^\d*\s*stor farris lime$/i, replaceWith: "farris lime 1.5l" },
+	{ match: /^\d*\s*boks pærebrus$/i, replaceWith: "pærebrus 0.33l" },
+	{ match: /^\d*\s*liten pærebrus$/i, replaceWith: "pærebrus 0.5l" },
+	{ match: /^\d*\s*stor pærebrus$/i, replaceWith: "pærebrus 1.5l" },
+	{ match: /^\d*\s*boks pærebrus uten sukker$/i, replaceWith: "pærebrus 0.33l (uten sukker)" },
+	{ match: /^\d*\s*liten pærebrus uten sukker$/i, replaceWith: "pærebrus 0.5l (uten sukker)" },
+	{ match: /^\d*\s*stor pærebrus uten sukker$/i, replaceWith: "pærebrus 1.5l (uten sukker)" },
+	{ match: /^\d*\s*boks solo super rød rabarbra$/i, replaceWith: "solo super rød - rabarbra 0.33l" },
+	{ match: /^\d*\s*liten solo super rød rabarbra$/i, replaceWith: "solo super rød - rabarbra 0.5l" },
+	{ match: /^\d*\s*stor solo super rød rabarbra$/i, replaceWith: "solo super rød - rabarbra 1.5l" },
+	{ match: /^\d*\s*boks sprite zero$/i, replaceWith: "sprite zero 0.33l" },
+	{ match: /^\d*\s*liten sprite zero$/i, replaceWith: "sprite zero 0.5l" },
+	{ match: /^\d*\s*stor sprite zero$/i, replaceWith: "sprite zero 1.5l" },
+	{ match: /^\d*\s*boks urge$/i, replaceWith: "urge 0.33l" },
+	{ match: /^\d*\s*liten urge$/i, replaceWith: "urge 0.5l" },
+	{ match: /^\d*\s*stor urge$/i, replaceWith: "urge 1.5l" },
+	{ match: /^\d*\s*boks urge uten sukker$/i, replaceWith: "urge 0.33l (uten sukker)" },
+	{ match: /^\d*\s*liten urge uten sukker$/i, replaceWith: "urge 0.5l (uten sukker)" },
+	{ match: /^\d*\s*stor urge uten sukker$/i, replaceWith: "urge 1.5l (uten sukker)" },
+	{ match: /^\d*\s*boks villa$/i, replaceWith: "villa 0.33l" },
+	{ match: /^\d*\s*liten villa$/i, replaceWith: "villa 0.5l" },
+	{ match: /^\d*\s*stor villa$/i, replaceWith: "villa 1.5l" },
+	{ match: /^\d*\s*boks villa uten sukker$/i, replaceWith: "villa 0.33l (uten sukker)" },
+	{ match: /^\d*\s*liten villa uten sukker$/i, replaceWith: "villa 0.5l (uten sukker)" },
+	{ match: /^\d*\s*stor villa uten sukker$/i, replaceWith: "villa 1.5l (uten sukker)" },
+	{ match: /^\d*\s*liten dahls$/i, replaceWith: "dahls 0.33l" },
+	{ match: /^\d*\s*stor dahls$/i, replaceWith: "dahls 0.5l" },
+	{ match: /^\d*\s*liten hansa$/i, replaceWith: "hansa 0.33l" },
+	{ match: /^\d*\s*stor hansa$/i, replaceWith: "hansa 0.5l" },
+	{ match: /^\d*\s*liten munkholm$/i, replaceWith: "munkholm 0.33l" },
+	{ match: /^\d*\s*stor munkholm$/i, replaceWith: "munkholm 0.5l" },
+	{ match: /^\d*\s*liten tuborg$/i, replaceWith: "tuborg 0.33l" },
+	{ match: /^\d*\s*stor tuborg$/i, replaceWith: "tuborg 0.5l" }
+
   ];
 
   const numberAndItemMatch = line.match(/^(\d*)\s*(.*)$/);
