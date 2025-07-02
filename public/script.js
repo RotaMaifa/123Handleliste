@@ -225,8 +225,6 @@ function applySuggestion(word, delta = +1) {
   textarea.focus();
 }
 
-
-
 function insertSelectedSuggestion(word) {
   const cursorPos = textarea.selectionStart;
   const text = textarea.value;
@@ -254,6 +252,43 @@ function insertSelectedSuggestion(word) {
   textarea.selectionStart = textarea.selectionEnd = lineStart + fixedLine.length;
   textarea.focus();
 }
+
+function triggerSuggestionFromCursor() {
+  const cursorPos = textarea.selectionStart;
+  const lines = textarea.value.split("\n");
+  const lineIndex = textarea.value.substring(0, cursorPos).split("\n").length - 1;
+  const currentLine = lines[lineIndex].trim();
+
+  // Safely build the regex to extract item after quantity + unit
+  const unit = getUnit().replace(".", "\\.");
+  const regex = new RegExp(`^(\\d+)?\\s*${unit}?\\s*(.*)$`, "i");
+  const match = currentLine.match(regex);
+  const query = match && match[2] ? match[2].toLowerCase().trim() : "";
+
+  if (query.length > 0) {
+    const matchedItems = groceries.filter(item => item.toLowerCase().trim() === query);
+    
+    if (matchedItems.length > 0) {
+      currentSuggestions = matchedItems;
+      showSuggestions(currentSuggestions);
+    } else {
+      showSuggestions();
+    }
+  } else {
+    showSuggestions();
+  }
+}
+
+// Trigger suggestions even when clicking on a line
+textarea.addEventListener("click", () => {
+  setTimeout(triggerSuggestionFromCursor, 0);  // slight delay to get updated cursor pos
+});
+
+textarea.addEventListener("keyup", (e) => {
+  // Ignore arrow keys and such
+  if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) return;
+  triggerSuggestionFromCursor();
+});
 
 
 
@@ -372,7 +407,7 @@ function lineMatchesSuggestion(line, suggestionText) {
 
   return regex.test(line.trim());
 }
-
+/*
 function checkLine(cursor, lines) {
   // Get line index based on cursor position
   const lineIndex = textarea.value.substring(0, cursor).split("\n").length - 1;
@@ -387,7 +422,7 @@ function checkLine(cursor, lines) {
 
   return isEmptyLine || isUnderline || isAllCaps;
 }
-
+*/
 	
 // Key Handling
 function checkLine(cursor, lines) {
