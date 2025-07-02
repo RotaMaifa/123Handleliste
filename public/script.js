@@ -149,7 +149,6 @@ function showSuggestions(list) {
     li.classList.add("placeholder");  // Add a class to identify
     li.style.color = "#666";
     li.style.padding = "6px";
-    li.style.fontStyle = "italic";
     li.style.pointerEvents = "none";  // Prevent click
     suggestionsBox.appendChild(li);
   } else {

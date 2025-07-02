@@ -98,7 +98,7 @@ body {
   background-color: #e1f5e7;
   border: 2px solid #000000;
   border-radius: 6px;
-  font-size: 16px;
+  font-size: 18px;
   list-style: none;
   text-align: left;
   padding: 0;
@@ -117,7 +117,6 @@ body {
 .suggestions-list.placeholder {
   color: #666;
   padding: 6px;
-  font-style: italic;
 }
 
 
@@ -126,7 +125,7 @@ button {
   margin-top: 20px;
   margin-left: 0px;
   margin-right: 0px;
-  font-size: 12px;
+  font-size: 18px;
   padding: 6px 12px;
   background-color: #cf816b;
   color: #000000;
@@ -142,7 +141,7 @@ button {
   margin-left: 0px;
   margin-right: 0px;
   text-align: center;
-  font-size: 17px;
+  font-size: 18px;
   color: #16c60c;
   font-weight: normal;
   transition: opacity 0.5s ease;
@@ -161,7 +160,7 @@ button {
 
 .description {
   margin-top: 10px;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: #000000;
   font-family: monospace;
 }
