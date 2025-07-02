@@ -1,4 +1,4 @@
-body {
+body { 
   font-family: 'Segoe UI', sans-serif;
   margin: 2px;
   padding: 10px;
@@ -161,7 +161,7 @@ button {
 }
 
 .description {
-  margin-top: 60px;
+  margin-top: 2px;
   font-size: 0.9rem;
   color: #000000;
   font-family: monospace;
@@ -301,4 +301,51 @@ button {
     position: static;
     margin: 5px auto;
   }
+}
+
+
+#fontSizeSlider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 300px;
+  height: 8px;
+  background: #e0f7fa;
+  border-radius: 5px;
+  outline: none;
+  margin: 0 0.5em;
+  background-color: #e0f7fa;
+  border: 2px solid #00796b;
+  border-radius: 6px;
+}
+
+#fontSizeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #a1e3a1;
+  cursor: pointer;
+  border-radius: 50%;
+  border: none;
+  margin-top: -2px;
+  border: 2px solid #00796b;
+  border-radius: 6px;
+}
+
+#fontSizeSlider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #a1e3a1;
+  cursor: pointer;
+  border-radius: 50%;
+  border: none;
+  background-color: #e0f7fa;
+  border: 2px solid #00796b;
+  border-radius: 6px;
+}
+
+#fontSizeSlider::-moz-range-track {
+  background: #e0f7fa;
+  height: 10px;
+  border-radius: 2px;
 }

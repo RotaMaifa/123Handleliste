@@ -16,13 +16,14 @@
 		Husk å kopiere og lim inn i ditt lokale skriveprogram — siden lagrer ikke!	
 	  </div>
 	</div>
-	<div class="header-right">
-	  <span id="prefixText" class="prefix-text" style="text-align: right; direction: rtl;">VALGTE<br>PREFIKS</span>
-	  <input id="unitInput" type="text" value="stk."/>		
-	  <button id="copyBtn" class="copy-button" >KOPIER</button>
-	  <button id="updateBtn" class="update-button" >OPPDATER</button>
-	  <button id="helpBtn" class="help-button">💡</button>	
+	<div class="header-right" style="display: flex; align-items: center; gap: 1px;">
+	  <span id="prefixText" class="prefix-text" style="text-align: right; direction: rtl; white-space: nowrap;">VALGTE<br>PREFIKS</span>
+	  <input id="unitInput" type="text" value="stk." style="flex-shrink: 0; width: 60px;" />
+	  <button id="copyBtn" class="copy-button">KOPIER</button>
+	  <button id="updateBtn" class="update-button">OPPDATER</button>
+	  <button id="helpBtn" class="help-button">💡</button>
 	</div>
+
 
     <div class="textarea-container"> 
       <textarea id="textarea" placeholder="Skriv dagligvarelisten her..."></textarea>
@@ -30,8 +31,12 @@
 	    <li class="placeholder" style="font-style: italic; color: #666;">Begynn å skrive dagligvarelisten</li>
 	  </ul>
     </div>
-	
-	
+
+	<div style="margin-top: 2rem; margin-right: 5rem; display: flex; justify-content: flex-end; align-items: center;">
+	  <input type="range" id="fontSizeSlider" min="12" max="38" value="22" style="margin-right: 0.5rem;">
+	  <span id="fontSizeValue" style="color: #e0f7fa;">16</span>
+	</div>
+
     <div class="description" style="font-size: 16px; font-family: monospace;">
 	  <div id="copyMessage" class="copy-message hidden">✅ Handleliste kopiert til utklippstavlen!</div>	
       By the Nightwatch, For the Nightwatch <br>
@@ -62,8 +67,10 @@
 		  </p>
 
 		  <p><strong style="font-size: 15px;">Legg til tillegg:</strong>
-			Når linjen er ferdig, kan du legge til tillegg bak varen ved å trykke "Ctrl + mellomrom" mens du står på linjen eller en tom linje like under, 
+			Når linjen er ferdig, kan du enten legge til tillegg bak varen ved å trykke "Ctrl + mellomrom" mens du står på linjen eller en tom linje like under, 
 			og bla mellom (uten sukker), (oppskåret), (skivet), (ikke skivet), (rimeligste) og (first price) ved å gjenta "Ctrl + mellomrom".		 
+			Eller så kan du skrive første bokstav i tillegget. feks: "2 stk. Havrebrød o" → "2 stk. Havrebrød (oppskåret)".	
+			Full liste: u→(uten sukker), o→(oppskåret), s→(skivet), i→(ikke skivet), r→(rimeligste) og f→(first price).
 		  </p>
 
 		  <p><strong style="font-size: 15px;">Hurtigkoblinger:</strong>
@@ -514,6 +521,10 @@
 			<span>→ 1 stk. fjordland raspeballer</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
+			<kbd>røyk</kbd>
+			<span>→  1 stk. paramount 20pk sigaretter. (om dere ikke har paramount, ta da prince hvit/rød.)</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>solo super</kbd>
 			<span>→ 1 stk. solo super 0.5l</span>
 		  </li>
@@ -627,55 +638,59 @@
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>Stor Sprite Zero</kbd>
-			<span>→ 1.5 l Sprite Zero</span>
+			<span>→ Sprite Zero 1.5l</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>Stor Urge</kbd>
-			<span>→ 1.5 l Urge</span>
+			<span>→ Urge 1.5l</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>Stor Urge uten sukker</kbd>
-			<span>→ 1.5 l Urge (uten sukker)</span>
+			<span>→ Urge 1.5l(uten sukker)</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>Stor Villa</kbd>
-			<span>→ 1.5 l Villa</span>
+			<span>→ Villa 1.5l</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>Stor Villa uten sukker</kbd>
-			<span>→ 1.5 l Villa (uten sukker)</span>
+			<span>→ Villa 1.5l(uten sukker)</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>Stor Dahls</kbd>
-			<span>→ 0.5 l Dahls</span>
+			<span>→ Dahls 0.5l</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>Stor Hansa</kbd>
-			<span>→ 0.5 l Hansa</span>
+			<span>→ Hansa 0.5l</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>Stor Munkholm</kbd>
-			<span>→ 0.5 l Munkholm</span>
+			<span>→ Munkholm 0.5l</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>Stor Tuborg</kbd>
-			<span>→ 0.5 l Tuborg</span>
+			<span>→ Tuborg 0.5l</span>
+		  </li>
+		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
+			<kbd>tobakk</kbd>
+			<span>→ tobakk tiedemanns rød, gul hvis tomt for rød.</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>truser</kbd>
-			<span>→ 1 stk. truser pierre robert high waist (organic cotton), sort, large</span>
+			<span>→ truser pierre robert high waist (organic cotton), sort, large</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>torsk</kbd>
-			<span>→ 1 stk. fjordland torsk</span>
+			<span>→ fjordland torsk</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>urge</kbd>
-			<span>→ 1 stk. urge 1.5l</span>
+			<span>→ urge 1.5l</span>
 		  </li>
 		  <li style="display: flex; justify-content: space-between; font-size: 20px;">
 			<kbd>villa</kbd>
-			<span>→ 1 stk. villa u/sukker 1.5l</span>
+			<span>→ villa u/sukker 1.5l</span>
 		  </li>
 		  
 		</ul>
@@ -686,5 +701,6 @@
   </div>
 
   <script src="script.js"></script>
+  
 </body>
 </html>
