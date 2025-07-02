@@ -7,14 +7,19 @@ body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  min-height: 100vh;
+  height: 100%;
+  min-height: 100px;
+  width: 100%;
+  min-width: 100px;  /* Make sure body can’t be narrower than 600px */
 }
 
 .container {
   margin: 10px auto;
-  width: 95%;
+  width: 100%;
   max-width: 1200px;
+  padding: 0 1rem;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .title {
@@ -38,7 +43,7 @@ body {
   color: #f5d1c7;
   margin: 1px auto;
   font-style: inherit;
-  max-width: 1000px;
+  max-width: 100%;
   line-height: 1.2;
   text-align: center;
   text-shadow:
@@ -55,24 +60,18 @@ body {
   margin-bottom: 2px;
 }
 
-.header-right {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 2px;
-}
 
 .textarea-container {
   display: flex;
   flex-direction: row;
   justify-content: center;
   align-items: flex-start;
-  margin: 2px auto;
+  margin: 0 auto;
   width: 100%;
   max-width: 1000px;
-  height: 600px;
+  min-width: 600px;   /* minimum width here */
+  height: 650px;
+  min-height: 100px;
   box-sizing: border-box;
 }
 
@@ -138,7 +137,7 @@ button {
 }
 
 .copy-message {
-  margin-top: 50px;
+  margin-top: 0px;
   margin-bottom: 0px;
   margin-left: 0px;
   margin-right: 0px;
@@ -161,18 +160,27 @@ button {
 }
 
 .description {
-  margin-top: 2px;
+  margin-top: 10px;
   font-size: 0.9rem;
   color: #000000;
   font-family: monospace;
 }
 
-.help-button {
+
+.header-right {
+  display: flex;
+  flex-wrap: nowrap;   /* no wrap for buttons */
+  overflow-x: auto;    /* scroll if too narrow */
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
   margin-top: 0px;
-  margin-left: 0px;
+  margin-left: 640px;
   margin-right: 0px;
   margin-bottom: 0px;
-  font-size: 12px;
+}
+
+.help-button {
   padding: 6px 12px;
   font-size: 12px;
   background-color: #e0f7fa;
@@ -183,10 +191,6 @@ button {
 }
 
 .copy-button {
-  margin-top: 0px;
-  margin-left: 0px;
-  margin-right: 0px;
-  margin-bottom: 0px;
   padding: 6px 12px;
   font-size: 12px;
   background-color: #e0f7fa;
@@ -197,10 +201,6 @@ button {
 }
 
 .update-button {
-  margin-top: 0px;
-  margin-left: 0px;
-  margin-right: 0px;
-  margin-bottom: 0px;
   padding: 6px 12px;
   font-size: 12px;
   background-color: #e0f7fa;
@@ -211,24 +211,19 @@ button {
 }
 
 #unitInput {
-  margin-top: 0px;
-  margin-left: 0px;
-  margin-right: 0px;
-  margin-bottom: 0px;
+  margin-top: 20px;	
+  padding: 6px 12px;
   font-size: 12px;
-  width: 30px;
-  padding: 4px;
-  font-size: 14px;
   background-color: #e0f7fa;
   border: 2px solid #00796b;
   border-radius: 6px;
+  cursor: pointer;
+  z-index: 1000;
 }
 
 .prefix-text {
-  margin-top: 0px;
-  margin-left: 680px;
-  margin-right: 0px;
-  margin-bottom: 0px;
+  margin-top: 15px;
+  padding: 6px 12px;
   font-size: 8px;
   font-weight: bold;
   text-align: right;
@@ -281,6 +276,7 @@ button {
 @media (max-width: 768px) {
   .textarea-container {
     flex-direction: column;
+    min-width: 100%; /* override min-width for small screens */
     height: auto;
   }
 
@@ -304,11 +300,24 @@ button {
 }
 
 
+.textsize-slider {
+  display: flex;
+  flex-wrap: nowrap;   /* no wrap for buttons */
+  overflow-x: auto;    /* scroll if too narrow */
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 25px;
+  margin-left: 705px;
+  margin-right: 0px;
+  margin-bottom: 25px;
+}
+
 #fontSizeSlider {
   -webkit-appearance: none;
   appearance: none;
-  width: 300px;
-  height: 8px;
+  width: 300px;       /* fixed width */
+  height: 10px;
   background: #e0f7fa;
   border-radius: 5px;
   outline: none;
@@ -316,6 +325,8 @@ button {
   background-color: #e0f7fa;
   border: 2px solid #00796b;
   border-radius: 6px;
+
+  flex-shrink: 0;     /* Prevent shrinking inside flex containers */
 }
 
 #fontSizeSlider::-webkit-slider-thumb {

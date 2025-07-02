@@ -17,13 +17,12 @@
 	  </div>
 	</div>
 	<div class="header-right" style="display: flex; align-items: center; gap: 1px;">
-	  <span id="prefixText" class="prefix-text" style="text-align: right; direction: rtl; white-space: nowrap;">VALGTE<br>PREFIKS</span>
+	  <span id="prefixText" class="prefix-text">VALGTE<br>PREFIKS</span>
 	  <input id="unitInput" type="text" value="stk." style="flex-shrink: 0; width: 60px;" />
 	  <button id="copyBtn" class="copy-button">KOPIER</button>
 	  <button id="updateBtn" class="update-button">OPPDATER</button>
-	  <button id="helpBtn" class="help-button">💡</button>
+	  <button id="helpBtn" class="help-button">💡</button>	  
 	</div>
-
 
     <div class="textarea-container"> 
       <textarea id="textarea" placeholder="Skriv dagligvarelisten her..."></textarea>
@@ -32,9 +31,9 @@
 	  </ul>
     </div>
 
-	<div style="margin-top: 2rem; margin-right: 5rem; display: flex; justify-content: flex-end; align-items: center;">
-	  <input type="range" id="fontSizeSlider" min="12" max="38" value="22" style="margin-right: 0.5rem;">
-	  <span id="fontSizeValue" style="color: #e0f7fa;">16</span>
+	<div class="textsize-slider" style="display: flex; align-items: center; gap: 1px;">  
+	    <input type="range" id="fontSizeSlider" min="12" max="38" value="22" style="margin-right: 0.5rem;">
+        <span id="fontSizeValue" style="color: #e0f7fa;">16</span> 
 	</div>
 
     <div class="description" style="font-size: 16px; font-family: monospace;">

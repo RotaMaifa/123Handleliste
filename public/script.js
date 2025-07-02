@@ -801,8 +801,13 @@ function fixKnownTyposAndProducts(line) {
   };
 
   for (const [abbr, full] of Object.entries(tags)) {
-    const regex = new RegExp(`(^|\\s)${abbr}(\\s|$)`, "i");
-    line = line.replace(regex, (match, p1, p2) => `${p1}${full}${p2}`);
+    // Matches: space or start → abbr → end of line
+    const regex = new RegExp(`(?:^|\\s)${abbr}$`, "i");
+    if (regex.test(line.trim())) {
+      // Replace the exact token at end
+      line = line.replace(regex, match => match.replace(new RegExp(`${abbr}$`, "i"), full));
+      break; // Only one match allowed
+    }
   }
 
   
