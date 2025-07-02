@@ -844,8 +844,11 @@ function fixKnownTyposAndProducts(line) {
     }
   }
 
-  
-  line = line.replace(/\bmalk\b/gi, "melk"); // Special 
+  // Special fixes
+  line = line.replace(/\bmalk\b/gi, "melk"); 
+  line = line.replace(/\bu\/sukker\b/gi, "(uten sukker)");	
+  line = line.replace(/(?<=\s)&(?=\s)/g, "og");
+  line = line.replace(/\bm\//gi, "med ");
   line = line.trim();
 
   // Pack replacements
