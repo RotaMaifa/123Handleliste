@@ -1,4 +1,5 @@
 
+
 let groceries = [];
 let currentSuggestions = [];
 let selectedIndex = -1;
@@ -11,6 +12,7 @@ const textarea = document.getElementById("textarea");
 const suggestionsBox = document.getElementById("suggestions");
 const unitInput = document.getElementById("unitInput");
 let previousUnit = getUnit();  // Initialize with current unit
+let isNavigatingSuggestions = false;
 
 function getUnit() {
   return unitInput.value.trim() || "stk.";
@@ -88,7 +90,6 @@ function getCurrentSectionItems(cursorPos) {
 }
 
 // Typing Suggestions
-textarea.addEventListener("input", updateSuggestions);
 function updateSuggestions() {
   const cursorPos = textarea.selectionStart;
   const lines = textarea.value.split("\n");
@@ -107,8 +108,7 @@ function updateSuggestions() {
 
   if (query.length > 0) {
     const sectionItems = getCurrentSectionItems(cursorPos);
-    const normalize = (str) =>
-      str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    // Use shared normalize function here â€” no need to redefine
     const normalizedQuery = normalize(query);
 
     currentSuggestions = groceries
@@ -138,6 +138,7 @@ function updateSuggestions() {
 
   showSuggestions(currentSuggestions);
 }
+
 
 
 function showSuggestions(list) {
@@ -173,7 +174,6 @@ function showSuggestions(list) {
   selectedIndex = -1;
 }
 
-
 function applySuggestion(word, delta = +1) {
   const cursorPos = textarea.selectionStart;
   const text = textarea.value;
@@ -183,36 +183,58 @@ function applySuggestion(word, delta = +1) {
   const originalLine = text.substring(lineStart, lineEnd === -1 ? text.length : lineEnd).trim();
 
   const unit = getUnit();
-  const unitPattern = unit.replace(".", "\\.");
 
-  // Regex to check if line is already fixed
-  const fixedRegex = new RegExp(`^(\\d+)\\s*${unitPattern}\\s+(.*)$`, "i");
-  const originalIsFixed = fixedRegex.test(originalLine);
+  // Regex to check if line is already fixed: qty + unit + product (+ optional tags)
+  const fixedRegex = new RegExp(`^(\\d+)\\s*${unit.replace(".", "\\.")}\\s+(.*)$`, "i");
 
-  // Parse original line quantity and product
+  // Parse original line quantity and product (including trailing tag if any)
   const originalMatch = originalLine.match(/^(\d+)?\s*(.*)$/);
   let qty = originalMatch?.[1] ? parseInt(originalMatch[1]) : 1;
   if (qty < 1) qty = 1;
 
   let productPart = originalMatch?.[2] || "";
 
-  // Build fixed line with original qty and suggestion
+  // --- Extract trailing tag from productPart ---
+  // This matches a trailing tag like (uten sukker), (skivet), etc. at end of line
+  let trailingTag = "";
+  for (const tag of tagCycleOptions.filter(t => t !== "none")) {
+    const normTag = normalize(tag);
+    const normProd = normalize(productPart);
+    if (normProd.endsWith(normTag)) {
+      const index = productPart.toLowerCase().lastIndexOf(tag.toLowerCase());
+      if (index !== -1) {
+        trailingTag = productPart.slice(index).trim();
+        productPart = productPart.slice(0, index).trim();
+        break;
+      }
+    }
+  }
+
+
+  // Build fixed line with updated qty, unit, product and trailing tag
   let fixedLine = `${qty} ${unit} ${capitalizeWords(word)}`;
+  if (trailingTag) {
+    fixedLine += ` ${trailingTag}`;
+  }
+
   fixedLine = autoFixLine(fixedLine);
 
-  // Parse fixed line to get product
+  // Parse fixed line to get product again for comparison
   const fixedMatch = fixedLine.match(fixedRegex);
   const fixedProduct = fixedMatch ? fixedMatch[2].toLowerCase().trim() : "";
   const suggestion = word.toLowerCase().trim();
 
   if (lineMatchesSuggestion(originalLine, word)) {
-    // Original line already fixed â†’ apply delta
+    // Original line already fixed â†’ apply delta (change qty)
     let newQty = parseInt(fixedMatch[1]);
     newQty += delta;
     if (newQty < 1) newQty = 1;
+
     fixedLine = `${newQty} ${unit} ${capitalizeWords(word)}`;
+    if (trailingTag) {
+      fixedLine += ` ${trailingTag}`;
+    }
   }
-  // else: line was not fixed â†’ just fix formatting, keep qty same
 
   // Replace the line in textarea
   const newText =
@@ -224,6 +246,7 @@ function applySuggestion(word, delta = +1) {
   textarea.selectionStart = textarea.selectionEnd = lineStart + fixedLine.length;
   textarea.focus();
 }
+
 
 function insertSelectedSuggestion(word) {
   const cursorPos = textarea.selectionStart;
@@ -247,10 +270,15 @@ function insertSelectedSuggestion(word) {
 
   // Replace in full text
   const newText = text.substring(0, lineStart) + fixedLine + text.substring(lineEnd === -1 ? text.length : lineEnd);
-
+  
   textarea.value = newText;
   textarea.selectionStart = textarea.selectionEnd = lineStart + fixedLine.length;
   textarea.focus();
+}
+
+
+function normalize(str) {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 }
 
 function triggerSuggestionFromCursor() {
@@ -259,37 +287,67 @@ function triggerSuggestionFromCursor() {
   const lineIndex = textarea.value.substring(0, cursorPos).split("\n").length - 1;
   const currentLine = lines[lineIndex].trim();
 
-  // Safely build the regex to extract item after quantity + unit
   const unit = getUnit().replace(".", "\\.");
   const regex = new RegExp(`^(\\d+)?\\s*${unit}?\\s*(.*)$`, "i");
   const match = currentLine.match(regex);
-  const query = match && match[2] ? match[2].toLowerCase().trim() : "";
 
-  if (query.length > 0) {
-    const matchedItems = groceries.filter(item => item.toLowerCase().trim() === query);
-    
+  let rawProductPart = match && match[2] ? match[2].trim() : "";
+
+  // Build tag regex with raw tag values (not normalized yet)
+  const rawTags = tagCycleOptions.filter(tag => tag !== "none");
+
+  for (const rawTag of rawTags) {
+    const normTag = normalize(rawTag);
+    const normProduct = normalize(rawProductPart);
+
+    if (normProduct.endsWith(normTag)) {
+      // Find the tag position in rawProductPart case-insensitively
+      const rawProductLower = rawProductPart.toLowerCase();
+      const rawTagLower = rawTag.toLowerCase();
+
+      const rawIndex = rawProductLower.lastIndexOf(rawTagLower);
+      if (rawIndex !== -1) {
+        rawProductPart = rawProductPart.slice(0, rawIndex).trim();
+      }
+      break;
+    }
+  }
+
+
+  const normalizedProduct = normalize(rawProductPart);
+
+  if (normalizedProduct.length > 0) {
+    const matchedItems = groceries.filter(item => normalize(item) === normalizedProduct);
+
     if (matchedItems.length > 0) {
       currentSuggestions = matchedItems;
       showSuggestions(currentSuggestions);
     } else {
-      showSuggestions();
+      showSuggestions(); // Show "Ingen forslag"
     }
   } else {
     showSuggestions();
   }
 }
 
+
+
 // Trigger suggestions even when clicking on a line
 textarea.addEventListener("click", () => {
   setTimeout(triggerSuggestionFromCursor, 0);  // slight delay to get updated cursor pos
 });
 
-textarea.addEventListener("keyup", (e) => {
-  // Ignore arrow keys and such
-  if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) return;
-  triggerSuggestionFromCursor();
-});
 
+
+textarea.addEventListener("keyup", (e) => {
+  if (["ArrowUp", "ArrowDown"].includes(e.key)) {
+    isNavigatingSuggestions = false;
+    return;  // Donâ€™t interfere after navigating
+  }
+
+  updateSuggestions();    
+
+});
 
 
 // Capital first letter in groceries
@@ -387,61 +445,33 @@ unitInput.addEventListener("change", () => {
 
 // Helper to check if line is the exact same as suggestion + prefix +(tagRegex?)
 function lineMatchesSuggestion(line, suggestionText) {
-  // Escape the unit and suggestionText for regex
-  const unitEscaped = getUnit().replace(".", "\\.");
-  const suggestionEscaped = suggestionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const unitEscaped = getUnit().trim().replace(".", "\\.");
 
-  // Build regex for tags (all except "none"), escaped and joined with |
+  const normalizedLine = normalize(line);
+  const normalizedSuggestion = normalize(suggestionText);
+
+  const suggestionPattern = normalizedSuggestion.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+
   const tags = tagCycleOptions
     .filter(tag => tag !== "none")
     .map(tag => tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
     .join("|");
 
-  // The tag part is optional (zero or one) with possible whitespace before it
   const tagPart = tags ? `(\\s+(${tags}))?` : "";
 
   const regex = new RegExp(
-    `^(\\d+)\\s*${unitEscaped}\\s+${suggestionEscaped}${tagPart}$`,
-    "i"
+    `^(\\d+)\\s*${unitEscaped}\\s+${suggestionPattern}${tagPart}$`
   );
 
-  return regex.test(line.trim());
+  return regex.test(normalizedLine);
 }
-/*
-function checkLine(cursor, lines) {
-  // Get line index based on cursor position
-  const lineIndex = textarea.value.substring(0, cursor).split("\n").length - 1;
-  const currentLine = lines[lineIndex].trim();
-  const normalizedLine = currentLine.normalize("NFC");
 
-  // Check if line is empty, only underscores, or all uppercase
-  const isEmptyLine = currentLine === "";
-  const isUnderline = currentLine === "__________________________________";
-  const isAllCaps = /^[A-ZÆØÅ0-9 .\-()]+$/.test(normalizedLine) &&
-                    normalizedLine === normalizedLine.toUpperCase();
-
-  return isEmptyLine || isUnderline || isAllCaps;
-}
-*/
-	
-// Key Handling
-function checkLine(cursor, lines) {
-  // Get line index based on cursor position
-  const lineIndex = textarea.value.substring(0, cursor).split("\n").length - 1;
-  const currentLine = lines[lineIndex].trim();
-  const normalizedLine = currentLine.normalize("NFC");
-
-  // Check if line is empty, only underscores, or all uppercase
-  const isEmptyLine = currentLine === "";
-  const isUnderline = currentLine === "__________________________________";
-  const isAllCaps = /^[A-ZÆØÅ0-9 .\-()]+$/.test(normalizedLine) &&
-                    normalizedLine === normalizedLine.toUpperCase();
-
-  return isEmptyLine || isUnderline || isAllCaps;
-}
 
 // Key Handling
 textarea.addEventListener("keydown", (e) => {
+  if (["ArrowUp", "ArrowDown"].includes(e.key)) {
+    isNavigatingSuggestions = true;
+  }
   const lines = textarea.value.split("\n");
   const cursorPos = textarea.selectionStart;
   const lineIndex = textarea.value.substring(0, cursorPos).split("\n").length - 1;
@@ -457,20 +487,16 @@ textarea.addEventListener("keydown", (e) => {
       return txt !== "Ingen forslag" && txt !== "Begynn Ã¥ skrive dagligvarelisten" && !item.classList.contains("placeholder");
     });
 
+	// Dont allow Suggestion Navigation if there is only one Suggestion and that is the same as 
+	// whats written in line. 
     const noSuggestions = validSuggestions.length === 0;
-
     let allowSuggestionNavigation;
+    const oneSuggestionMatchesLine =
+      validSuggestions.length === 1 &&
+      lineMatchesSuggestion(currentLine, validSuggestions[0].textContent.trim());
 
-    if (checkLine(cursorPos, lines)) {
-      allowSuggestionNavigation = false;
-    } else {
-      const oneSuggestionMatchesLine =
-        validSuggestions.length === 1 &&
-        lineMatchesSuggestion(currentLine, validSuggestions[0].textContent.trim().toLowerCase());
+    allowSuggestionNavigation = !noSuggestions && !oneSuggestionMatchesLine;
 
-      allowSuggestionNavigation = !noSuggestions && !oneSuggestionMatchesLine;
-	  
-    }
 
     if (allowSuggestionNavigation) {
       if (e.key === "ArrowDown") {
@@ -480,14 +506,6 @@ textarea.addEventListener("keydown", (e) => {
         e.preventDefault();
         selectedIndex = (selectedIndex - 1 + validSuggestions.length) % validSuggestions.length;
       }
-	  
-	} else {  
-	
-      // Run updateSuggestions when navigating with arrows outside of suggestion navigation
-      if (isArrowKey && (!allowSuggestionNavigation || suggestionsBox.style.display !== "block")) {
-        updateSuggestions();
-      } 
-	  
     }
 
     if (e.key === "Enter" && selectedIndex >= 0 && validSuggestions.length > 0) {
@@ -504,7 +522,7 @@ textarea.addEventListener("keydown", (e) => {
       if (currentItem === selectedText) return; // don't insert duplicate
 
       e.preventDefault();
-      insertSelectedSuggestion(selectedItem.textContent);
+      insertSelectedSuggestion(selectedItem.textContent);   
     }
 
     // Update active class only on validSuggestions and selectedIndex
@@ -538,6 +556,7 @@ textarea.addEventListener("keydown", (e) => {
           // Move cursor to next line (without extra line)
           const newCursor = lines.slice(0, i + 1).join("\n").length + 1;
           textarea.selectionStart = textarea.selectionEnd = newCursor;
+		  //updateSuggestions();
         }
 
         break;
@@ -624,7 +643,6 @@ function capitalizeWords(text) {
     .join(" ");
 }
 
-// Utility: Auto-correct line
 function autoFixLine(line) {
   if (!line) return "";
 
@@ -644,21 +662,21 @@ function autoFixLine(line) {
 
   line = fixKnownTyposAndProducts(line);
 
-  const normalizedGroceries = groceries.map(g => g.toLowerCase());
+  const normalizedGroceries = groceries.map(g => normalize(g));
 
   // Match format: "1 lett melk"
   const match = line.match(/^(\d+)\s+(.+)$/);
   if (match) {
     const quantity = match[1];
-    const itemName = match[2].toLowerCase().trim();
+    const itemName = normalize(match[2]);
     if (normalizedGroceries.includes(itemName)) {
-      line = `${quantity} ${getUnit()} ${capitalizeWords(itemName)}`;
+      line = `${quantity} ${getUnit()} ${capitalizeWords(match[2])}`;  // capitalize original casing
     }
-  }
-
-  // Match: "lett melk" (no quantity)
-  if (normalizedGroceries.includes(line.toLowerCase())) {
-    line = `1 ${getUnit()} ${capitalizeWords(line.toLowerCase())}`;
+  } else {
+    // Match: "lett melk" (no quantity)
+    if (normalizedGroceries.includes(normalize(line))) {
+      line = `1 ${getUnit()} ${capitalizeWords(line)}`;
+    }
   }
 
   // Append tag back
@@ -668,6 +686,7 @@ function autoFixLine(line) {
 
   return line;
 }
+
 
 
 const helpBtn = document.getElementById("helpBtn");
@@ -716,13 +735,14 @@ document.getElementById("updateBtn").addEventListener("click", (e) => {
   const lines = textarea.value.split("\n");
   const currentPrefix = getUnit(); // e.g. "stk."
 
-  const normalizedGroceries = groceries.map(g => g.toLowerCase());
+  // Use normalize here for consistent matching
+  const normalizedGroceries = groceries.map(g => normalize(g));
 
   const updatedLines = lines.map((line) => {
     // Fix known typos and variants first
     const fixedLine = fixKnownTyposAndProducts(line);
 
-    // Normalize prefixes & add current prefix
+    // Normalize prefixes & add current prefix, passing normalizedGroceries for matching
     return normalizeLinePrefix(fixedLine, currentPrefix, normalizedGroceries);
   });
 
@@ -730,7 +750,11 @@ document.getElementById("updateBtn").addEventListener("click", (e) => {
 });
 
 
+
 function normalizeLinePrefix(line, prefix, normalizedGroceries) {
+  const normalize = (str) =>
+    str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
   const trimmed = line.trim();
   if (!trimmed) return "";
 
@@ -744,27 +768,28 @@ function normalizeLinePrefix(line, prefix, normalizedGroceries) {
   // Remove old prefixes (#, stk., pk., etc.) from start
   itemText = itemText.replace(/^(#|stk\.|pk\.|stk|pk)\s*/i, "").trim();
 
-  // Lowercase for matching
-  const itemNameLower = itemText.toLowerCase();
+  // Normalize for matching
+  const itemNameNormalized = normalize(itemText);
 
-  // Check if item is in groceries list
-  if (normalizedGroceries.includes(itemNameLower)) {
+  // Check if item is in groceries list (already normalized)
+  if (normalizedGroceries.includes(itemNameNormalized)) {
     return `${quantity} ${prefix} ${itemText}`;
   }
 
   // Try split with sub-prefix (like "stk. ketchup")
   const subMatch = itemText.match(/^([^\s]+)\s+(.*)$/);
   if (subMatch) {
-    const maybePrefix = subMatch[1].toLowerCase();
+    const maybePrefix = subMatch[1];
     const rest = subMatch[2].trim();
 
-    const fullLower = `${maybePrefix} ${rest}`.toLowerCase();
+    const fullNormalized = normalize(`${maybePrefix} ${rest}`);
+    const restNormalized = normalize(rest);
 
-    if (normalizedGroceries.includes(fullLower)) {
+    if (normalizedGroceries.includes(fullNormalized)) {
       return `${quantity} ${prefix} ${rest}`;
     }
 
-    if (normalizedGroceries.includes(rest.toLowerCase())) {
+    if (normalizedGroceries.includes(restNormalized)) {
       return `${quantity} ${prefix} ${rest}`;
     }
   }
