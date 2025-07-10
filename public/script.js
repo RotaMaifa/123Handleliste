@@ -1,11 +1,8 @@
 
-
 let groceries = [];
 let currentSuggestions = [];
 let selectedIndex = -1;
 let tagCycleIndex = 0;
-
-
 
 const tagCycleOptions = ["(uten sukker)", "(oppskåret)", "(skivet)", "(ikke skivet)",  "(rimeligste)", "(first price)","none"];
 const textarea = document.getElementById("textarea");
@@ -688,17 +685,29 @@ function autoFixLine(line) {
 }
 
 
-
+// Help/ info screen and exit options
 const helpBtn = document.getElementById("helpBtn");
 const helpModal = document.getElementById("helpModal");
 const closeHelp = document.getElementById("closeHelp");
 
+// Show modal
 helpBtn.addEventListener("click", () => {
   helpModal.classList.remove("hidden");
+  helpModal.style.display = "flex";
 });
 
+// Close modal with X button
 closeHelp.addEventListener("click", () => {
   helpModal.classList.add("hidden");
+  helpModal.style.display = "none";
+});
+
+// Close modal by clicking outside help-content
+helpModal.addEventListener("click", (event) => {
+  if (event.target === helpModal) {
+    helpModal.classList.add("hidden");
+    helpModal.style.display = "none";
+  }
 });
 
 

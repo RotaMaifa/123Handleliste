@@ -43,10 +43,16 @@
     </div>
 
 	<!-- Help Modal -->
-	<div id="helpModal" class="help-modal hidden">
-	  <div class="help-content" style="font-size: 16px; font-family: sans-serif;">
-		<span class="close-btn" id="closeHelp">&times;</span>
-
+	<div id="helpModal" class="help-modal hidden" 
+		 style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+				background-color: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 9999;">
+		
+	  <div class="help-content" 
+		   style="background: white; padding: 20px; border-radius: 10px; max-width: 1000px; max-height: 90vh; overflow-y: auto; position: relative; margin-top: 5vh; margin-bottom: 5vh;">
+		
+		<span class="close-btn" id="closeHelp" 
+			  style="position: absolute; top: 10px; right: 15px; cursor: pointer;">&times;</span>
+		
 		<strong style="font-size: 18px;">Hva er 1-2-3 Handleliste?</strong>
 		<div style="text-align: left; direction: ltr;">
 		  <p><strong style="font-size: 15px;">Generelt:</strong>
