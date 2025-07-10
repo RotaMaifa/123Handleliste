@@ -292,6 +292,7 @@ button {
 
   .header-right {
 	position: static;
+	width: 300px; 
     flex-direction: column;
   }
 
@@ -299,11 +300,16 @@ button {
     position: static;
     margin: 5px auto;
   }
+  
+  .textsize-slider {
+	position: static;
+	width: 300px; 
+    flex-direction: column;
+  } 
 }
 
 
 .textsize-slider {
-  position: static;
   display: flex;
   flex-wrap: nowrap;   /* no wrap for buttons */
   overflow-x: auto;    /* scroll if too narrow */
