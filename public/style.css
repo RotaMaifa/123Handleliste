@@ -291,8 +291,6 @@ button {
   }
 
   .header-right {
-	position: static;
-	width: 300px; 
     flex-direction: column;
   }
 
@@ -300,12 +298,6 @@ button {
     position: static;
     margin: 5px auto;
   }
-  
-  .textsize-slider {
-	position: static;
-	width: 300px; 
-    flex-direction: column;
-  } 
 }
 
 
